@@ -1,16 +1,28 @@
-import keyboard, time, csv
+import keyboard, time, csv, datetime, random
 
+# -Администраторская панель-
 class Admins_data:
     info = []
     changes = 0
 
+    @staticmethod
+    def load_file(name):
+        with open(name, 'r', encoding='utf-8') as f_read:
+            fr = csv.reader(f_read, delimiter=",")
+            Admins_data.info = list(fr)
 
-# -Администраторская панель-
+    @staticmethod
+    def save_file(name):
+        with open(name, 'w', encoding='utf-8') as f_write:
+            wr = csv.writer(f_write, lineterminator='\r')
+            for i in Admins_data.info:
+                wr.writerow(i)
+
 def admin_panel():
     print('\n')
     l = input('Введите логин: ')
     p = input('Введите пароль: ')
-    Admins_data.info = read_file(admins_filename)
+    Admins_data.load_file(admins_filename)
     if check_login(l, p, Admins_data.info):
         vivod_menu(admin_menu)
     else:
@@ -24,15 +36,11 @@ def admin_save_changes():
     no = {'n', 'N', 'т', 'Т'}
     while True:
         clear()
-        print(txt_war)
-        print('Список администраторов был редактирован')
+        print(txt_war+'Список администраторов был редактирован')
         print('Хотите сохранить изменения? (y/n):')
         key = keyboard.read_key()
         if key in yes:
-            with open(admins_filename, 'w', encoding='utf-8') as f_write:
-                wr = csv.writer(f_write, lineterminator='\r')
-                for i in Admins_data.info:
-                    wr.writerow(i)
+            Admins_data.save_file(admins_filename)
             Admins_data.changes = 0
             clear()
             print(txt_suc+'Изменения внесены успешно!')
@@ -65,7 +73,7 @@ def admin_del():
             print(txt_suc+'Удаление произошло успешно!')
             press_enter()
         else:
-            print(txt_err+' Искомый логин не найден')
+            print(txt_err+'Искомый логин не найден')
             press_enter()
     else:
         print(txt_war+'Удаление единственного админа невозможно')
@@ -106,12 +114,129 @@ def admin_change_date():
 def admin_get_info():
     pass
 
-# Меню -пользователя-
+# Меню -пользователя
+class Tickets_data:
+    data = []
+    nums = 0
+
+    @staticmethod
+    def save_file(name):
+        with open(name, 'w', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=list(Tickets_data.data[0].keys()), lineterminator='\r')
+            writer.writeheader()
+            for d in Tickets_data.data:
+                writer.writerow(d)
+
+    @staticmethod
+    def load_file(name):
+        with open(name, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for dict in reader:
+                Tickets_data.data.append(dict)
+                Tickets_data.nums += 1
+
+
+
+class Tech:
+    typ = ''
+    def __init__(self, mark='', dam=''):
+        if mark == '': self.mark = input(f'Введите марку {self.typ}а: ')
+        else: self.mark = mark
+        if dam == '': self.damage = input(f'Введите поломку {self.typ}а: ')
+        else: self.damage = dam
+
+class Phone(Tech):
+    typ = 'телефон'
+    def __init__(self, mark='', dam='', os=''):
+        super().__init__(mark, dam)
+        if os == '': self.os = input('Введите операционную систему: ')
+        else: self.os = os
+
+    def __str__(self):
+        return '-'.join([self.typ,self.mark,self.os,self.damage])
+
+class Note(Phone):
+    typ = 'ноутбук'
+    def __init__(self, mark='', dam='', os='', year=''):
+        super().__init__(mark, dam, os)
+        if year == '': self.year = input(f'Введите год выпуска {self.typ}а: ')
+        else: self.year = year
+
+    def __str__(self):
+        return '-'.join([self.typ,self.mark,self.os,self.year,self.damage])
+
+class TV(Tech):
+    typ = 'телевизор'
+    def __init__(self, mark='', dam='', diag=''):
+        super().__init__(mark, dam)
+        if diag == '': self.diag = input(f'Введите диагональ {self.typ}а: ')
+        else: self.diag = diag
+
+    def __str__(self):
+        return '-'.join([self.typ,self.mark,self.diag,self.damage])
+
+
 def user_give():
-    pass
+    ticket = {'num': '', 'fio': '', 'type': '', 'date_in': datetime.date.today(),
+              'date_out': datetime.date.today() + datetime.timedelta(days=random.randint(1, 5)), 'status': ''}
+    clear()
+    print('Регистрация ремонта')
+    ticket['num'] = str(Tickets_data.nums + 1)
+    ticket['fio'] = input('Введите ФИО: ')
+    print('Какой тип техники сдается в ремонт?:')
+    print('1 - телефон')
+    print('2 - ноутбук')
+    print('3 - телевизор')
+    t = input()
+    if t == '1': ticket['type'] = Phone()
+    elif t == '2': ticket['type'] = Note()
+    elif t == '3': ticket['type'] = TV()
+    ticket['status'] = 'принята в ремонт'
+    clear()
+    print('Техника принята в ремонт\n')
+    print_ticket(ticket)
+    ticket['status'] = 'ремонтируется'
+    Tickets_data.data.append(ticket)
+    Tickets_data.nums += 1
+    Tickets_data.save_file(ticket_filename)
+    press_enter()
+
+def print_ticket(ticket):
+    print(f'Квитанция # {ticket["num"]}:')
+    print(f'ФИО:          {ticket["fio"]}')
+    print(f'Техника:      {ticket["type"]}')
+    print(f'Дата приемки: {ticket["date_in"]}')
+    print(f'Дата выдачи:  {ticket["date_out"]}')
+    print(f'Статус:       {ticket["status"]}')
 
 def user_get_info():
-    pass
+    k = input('Введите номер квитанции или ФИО:\n')
+    clear()
+    found_tickets = from_SetTup_to_ListDict(search_ticket(k))
+    if len(found_tickets):
+        for i in found_tickets: print_ticket(i)
+        press_enter()
+    else:
+        print(txt_err + 'Квитанция не найдена')
+        press_enter()
+
+def from_SetTup_to_ListDict(s):
+    new_s = []
+    for i in list(s):
+        new_s.append(dict(i))
+    return new_s
+
+def search_ticket(k):
+    s = set()
+    if k.isdigit(): key = 'num'
+    else: key = 'fio'
+    for i in Tickets_data.data:
+        if i[key] == k:
+            s.add(tuple(i.items()))
+            if key == 'num': break
+    if key == 'num' and s: s.update(search_ticket(i['fio']))
+    return s
+
 
 # Основные функции -Main-
 def vivod_menu(menu):
@@ -140,11 +265,6 @@ def clear():
 def press_enter():
     print(input('Нажмите клавишу Enter для продолжения...'))
 
-def read_file(name):
-    with open(name, 'r', encoding='utf-8') as f_read:
-        fr = csv.reader(f_read, delimiter=",")
-        return list(fr)
-
 # Менюшки
 main_menu = {1:[user_give, 'Сдать в ремонт'],
              2:[user_get_info, 'Просмотреть информацию'],
@@ -163,13 +283,15 @@ admin_actions_menu = {1:[admin_change_status, 'Изменить статус р�
                       4:[0, 'Возврат в администраторскую панель']}
 
 # Приставка текста всплывающих предупреждений
-txt_err = '!!! ОШИБКА !!! '
-txt_war = 'ПРЕДУПРЕЖДЕНИЕ ! '
-txt_suc = 'УСПЕХ ! '
+txt_err = '!!! ОШИБКА !!!\n'
+txt_war = 'ПРЕДУПРЕЖДЕНИЕ !\n'
+txt_suc = 'УСПЕХ !\n'
 
 admins_filename = 'Data/admins.csv'
-
+ticket_filename = 'Data/tickets.csv'
 
 
 # Тело программы
+Tickets_data.load_file(ticket_filename)
 vivod_menu(main_menu)
+Tickets_data.save_file(ticket_filename)
