@@ -4,6 +4,8 @@ import keyboard, time, csv, datetime, random
 class Admins_data:
     info = []
     changes = 0
+    found_ticket = {}
+    found_index = 0
 
     @staticmethod
     def load_file(name):
@@ -67,8 +69,8 @@ def admin_del():
     clear()
     n = input('Введите логин админа для его удаления: ')
     if len(Admins_data.info) > 1:
-        if admin_login_seaarch(n) != -1:
-            Admins_data.info.pop(admin_login_seaarch(n))
+        if admin_login_search(n) != -1:
+            Admins_data.info.pop(admin_login_search(n))
             Admins_data.changes += 1
             print(txt_suc+'Удаление произошло успешно!')
             press_enter()
@@ -84,7 +86,7 @@ def admin_add():
         clear()
         print('Регистрация нового администратора')
         log = input('Введите логин: ')
-        if admin_login_seaarch(log) == -1:
+        if admin_login_search(log) == -1:
             psw = input('Введите пароль: ')
             fio = input('Введите ФИО: ')
             Admins_data.info.append([log, psw, fio])
@@ -95,29 +97,68 @@ def admin_add():
             press_enter()
             continue
 
-def admin_login_seaarch(log):
+def admin_login_search(log):
     for index in range(0, len(Admins_data.info)):
         if log == Admins_data.info[index][0]: return index
         index += 1
     return -1   # если возвращается -1, значит логина нету, иначе возвращается индекс логина в списке
 
 def admin_actions():
-    k = input('Введите номер квитанции')
-    vivod_menu(admin_actions_menu)
+    k = input('Введите номер квитанции:\n')
+    Admins_data.found_ticket = from_SetTup_to_ListDict(search_ticket(k, 'one'))[0]
+    if len(Admins_data.found_ticket):
+        Tickets_data.load_file(ticket_filename)
+        vivod_menu(admin_actions_menu)
+        Tickets_data.save_ticket()
+    else:
+        print(txt_err + 'Квитанция не найдена')
+        press_enter()
+
 
 def admin_change_status():
-    pass
+    print('Измените статус ремонта на:')
+    print('1 - ремонтируется')
+    print('2 - готово')
+    print('3 - выдано клиенту')
+    t = input()
+    if t == '1':
+        Admins_data.found_ticket['status'] = 'ремонтируется'
+    elif t == '2':
+        Admins_data.found_ticket['status'] = 'готово'
+    elif t == '3':
+        Admins_data.found_ticket['status'] = 'выдано клиенту'
+    clear()
+    print(txt_suc + 'Квитанция после изменения:\n-----')
+    admin_get_info()
 
 def admin_change_date():
-    pass
+    print('Производится изменение даты выполнения ремонта:')
+    d = int(input('Введите число:\n'))
+    m = int(input('Введите месяц:\n'))
+    y = int(input('Введите год:\n'))
+    Admins_data.found_ticket['date_out'] = datetime.date(y, m, d)
+    clear()
+    print(txt_suc+'Квитанция после изменения:\n-----')
+    admin_get_info()
 
 def admin_get_info():
+    print_ticket(Admins_data.found_ticket)
+    press_enter()
+
+def admin_save_ticket_changes():
     pass
+
 
 # Меню -пользователя
 class Tickets_data:
     data = []
     nums = 0
+    found_tickets = []
+    found_index = 0
+
+    def save_ticket():
+        Tickets_data.data[Tickets_data.found_index] = Admins_data.found_ticket
+        Tickets_data.save_file(ticket_filename)
 
     @staticmethod
     def save_file(name):
@@ -131,10 +172,10 @@ class Tickets_data:
     def load_file(name):
         with open(name, 'r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
+            Tickets_data.data = []
             for dict in reader:
                 Tickets_data.data.append(dict)
                 Tickets_data.nums += 1
-
 
 
 class Tech:
@@ -212,9 +253,10 @@ def print_ticket(ticket):
 def user_get_info():
     k = input('Введите номер квитанции или ФИО:\n')
     clear()
-    found_tickets = from_SetTup_to_ListDict(search_ticket(k))
-    if len(found_tickets):
-        for i in found_tickets: print_ticket(i)
+    Tickets_data.found_tickets = from_SetTup_to_ListDict(search_ticket(k, 'all'))
+    if len(Tickets_data.found_tickets):
+        for i in Tickets_data.found_tickets:
+            print_ticket(i)
         press_enter()
     else:
         print(txt_err + 'Квитанция не найдена')
@@ -226,15 +268,19 @@ def from_SetTup_to_ListDict(s):
         new_s.append(dict(i))
     return new_s
 
-def search_ticket(k):
+def search_ticket(k, flag='one'):
     s = set()
     if k.isdigit(): key = 'num'
     else: key = 'fio'
+    index = 0
     for i in Tickets_data.data:
         if i[key] == k:
             s.add(tuple(i.items()))
-            if key == 'num': break
-    if key == 'num' and s: s.update(search_ticket(i['fio']))
+            if key == 'num':
+                Tickets_data.found_index = index
+                break
+        index += 1
+    if key == 'num' and s and flag == 'all': s.update(search_ticket(i['fio']))
     return s
 
 
@@ -294,4 +340,3 @@ ticket_filename = 'Data/tickets.csv'
 # Тело программы
 Tickets_data.load_file(ticket_filename)
 vivod_menu(main_menu)
-Tickets_data.save_file(ticket_filename)
