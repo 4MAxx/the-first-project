@@ -3,15 +3,25 @@ import keyboard, time, csv, datetime, random
 # -Администраторская панель-
 class Admins_data:
     info = []
+    amount = 0
     changes = 0
     found_ticket = {}
     found_index = 0
+    # мастер логин, дает возможность входа в админ-панель, при отсутствии файла с администраторами,
+    # нельзя проверять наличие файла, и при отсутствии давать доступ по первому входу любого логина-пароля
+    # иначе можно получить доступ к админ-панели, удалив файл с логинами
+    master_login = [['master', '123', 'master login']]
 
     @staticmethod
     def load_file(name):
-        with open(name, 'r', encoding='utf-8') as f_read:
-            fr = csv.reader(f_read, delimiter=",")
-            Admins_data.info = list(fr)
+        try:
+            with open(name, 'r', encoding='utf-8') as f_read:
+                fr = csv.reader(f_read, delimiter=",")
+                Admins_data.info = list(fr)
+                Admins_data.amount = len(Admins_data.info)
+        except FileNotFoundError:
+            Admins_data.info = []
+            Admins_data.amount = 0
 
     @staticmethod
     def save_file(name):
@@ -21,17 +31,22 @@ class Admins_data:
                 wr.writerow(i)
 
 def admin_panel():
+    Admins_data.load_file(admins_filename)
     print('\n')
     l = input('Введите логин: ')
     p = input('Введите пароль: ')
-    Admins_data.load_file(admins_filename)
-    if check_login(l, p, Admins_data.info):
+    if check_login(l, p, Admins_data.info) or check_login(l, p, Admins_data.master_login):
         vivod_menu(admin_menu)
     else:
         print(txt_err+'Введенные данные не верны')
         press_enter()
     if Admins_data.changes >= 1:
         admin_save_changes()
+
+def check_login(l, p, admins):
+    for i in admins:
+        if l == i[0] and p == i[1]: return True
+    return False
 
 def admin_save_changes():
     yes = {'y', 'Y', 'Н', 'н'}
@@ -52,34 +67,34 @@ def admin_save_changes():
             Admins_data.changes = 0
             break
 
-def check_login(l, p, admins):
-    for i in admins:
-        if l == i[0] and p == i[1]: return True
-    return False
+def if_no_admins():
+    print(txt_war+'Не зарегистрировано ни одного администратора')
 
 def admin_spisok():
     clear()
-    n = 1
-    for i in Admins_data.info:
-        print(n,' |', ', '.join(i))
-        n += 1
+    if Admins_data.amount == 0: if_no_admins()
+    else:
+        n = 1
+        for i in Admins_data.info:
+            print(n,' |', ', '.join(i))
+            n += 1
     press_enter()
 
 def admin_del():
     clear()
-    n = input('Введите логин админа для его удаления: ')
-    if len(Admins_data.info) > 1:
-        if admin_login_search(n) != -1:
-            Admins_data.info.pop(admin_login_search(n))
-            Admins_data.changes += 1
-            print(txt_suc+'Удаление произошло успешно!')
-            press_enter()
-        else:
-            print(txt_err+'Искомый логин не найден')
-            press_enter()
+    if Admins_data.amount == 0: if_no_admins()
     else:
-        print(txt_war+'Удаление единственного админа невозможно')
-        press_enter()
+        n = input('Введите логин админа для его удаления: ')
+        if len(Admins_data.info) > 1:
+            if admin_login_search(n) != -1:
+                Admins_data.info.pop(admin_login_search(n))
+                Admins_data.changes += 1
+                print(txt_suc+'Удаление произошло успешно!')
+            else:
+                print(txt_err+'Искомый логин не найден')
+        else:
+            print(txt_war+'Удаление единственного админа невозможно')
+    press_enter()
 
 def admin_add():
     while True:
@@ -91,6 +106,7 @@ def admin_add():
             fio = input('Введите ФИО: ')
             Admins_data.info.append([log, psw, fio])
             Admins_data.changes += 1
+            Admins_data.amount += 1
             break
         else:
             print(txt_err+'Введенный логин уже существует')
@@ -149,7 +165,7 @@ def admin_save_ticket_changes():
     pass
 
 
-# Меню -пользователя
+# Класс управления квитанциями
 class Tickets_data:
     data = []
     nums = 0
@@ -217,6 +233,7 @@ class TV(Tech):
         return '-'.join([self.typ,self.mark,self.diag,self.damage])
 
 
+# Меню -пользователя
 def user_give():
     ticket = {'num': '', 'fio': '', 'type': '', 'date_in': datetime.date.today(),
               'date_out': datetime.date.today() + datetime.timedelta(days=random.randint(1, 5)), 'status': ''}
