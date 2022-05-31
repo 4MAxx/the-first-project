@@ -5,7 +5,7 @@ class Admins_data:
     info = []
     amount = 0
     changes = 0
-    found_ticket = {}
+    found_ticket = []
     found_index = 0
     # мастер логин, дает возможность входа в админ-панель, при отсутствии файла с администраторами,
     # нельзя проверять наличие файла, и при отсутствии давать доступ по первому входу любого логина-пароля
@@ -121,7 +121,7 @@ def admin_login_search(log):
 
 def admin_actions():
     k = input('Введите номер квитанции:\n')
-    Admins_data.found_ticket = from_SetTup_to_ListDict(search_ticket(k, 'one'))[0]
+    Admins_data.found_ticket = from_SetTup_to_ListDict(search_ticket(k, 'one'))
     if len(Admins_data.found_ticket):
         Tickets_data.load_file(ticket_filename)
         vivod_menu(admin_actions_menu)
@@ -138,11 +138,11 @@ def admin_change_status():
     print('3 - выдано клиенту')
     t = input()
     if t == '1':
-        Admins_data.found_ticket['status'] = 'ремонтируется'
+        Admins_data.found_ticket[0]['status'] = 'ремонтируется'
     elif t == '2':
-        Admins_data.found_ticket['status'] = 'готово'
+        Admins_data.found_ticket[0]['status'] = 'готово'
     elif t == '3':
-        Admins_data.found_ticket['status'] = 'выдано клиенту'
+        Admins_data.found_ticket[0]['status'] = 'выдано клиенту'
     clear()
     print(txt_suc + 'Квитанция после изменения:\n-----')
     admin_get_info()
@@ -152,13 +152,13 @@ def admin_change_date():
     d = int(input('Введите число:\n'))
     m = int(input('Введите месяц:\n'))
     y = int(input('Введите год:\n'))
-    Admins_data.found_ticket['date_out'] = datetime.date(y, m, d)
+    Admins_data.found_ticket[0]['date_out'] = datetime.date(y, m, d)
     clear()
     print(txt_suc+'Квитанция после изменения:\n-----')
     admin_get_info()
 
 def admin_get_info():
-    print_ticket(Admins_data.found_ticket)
+    print_ticket(Admins_data.found_ticket[0])
     press_enter()
 
 def admin_save_ticket_changes():
@@ -173,7 +173,7 @@ class Tickets_data:
     found_index = 0
 
     def save_ticket():
-        Tickets_data.data[Tickets_data.found_index] = Admins_data.found_ticket
+        Tickets_data.data[Tickets_data.found_index] = Admins_data.found_ticket[0]
         Tickets_data.save_file(ticket_filename)
 
     @staticmethod
@@ -186,12 +186,18 @@ class Tickets_data:
 
     @staticmethod
     def load_file(name):
-        with open(name, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            Tickets_data.data = []
-            for dict in reader:
-                Tickets_data.data.append(dict)
-                Tickets_data.nums += 1
+        try:
+            with open(name, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                Tickets_data.data = []
+                for dict in reader:
+                    Tickets_data.data.append(dict)
+                    Tickets_data.nums += 1
+        except FileNotFoundError:
+            # если нет файла квитанций, то ошибки при чтении из файла игнорим, есть возможность войти в систему и
+            # сдавать в ремонт, админ панель доступна. При попытках поиска информации выводится ошибка, что квитанции нету
+            # оно логично - т.к. списки будут пусты
+            pass
 
 
 class Tech:
@@ -279,6 +285,7 @@ def user_get_info():
         print(txt_err + 'Квитанция не найдена')
         press_enter()
 
+# переводим множество кортежей обратно в список словарей
 def from_SetTup_to_ListDict(s):
     new_s = []
     for i in list(s):
@@ -298,7 +305,7 @@ def search_ticket(k, flag='one'):
                 break
         index += 1
     if key == 'num' and s and flag == 'all': s.update(search_ticket(i['fio']))
-    return s
+    return s    # возвращается сет с кортежами всех найденных квитанций (поиск по номеру и по фио) без повторов
 
 
 # Основные функции -Main-
