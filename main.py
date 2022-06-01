@@ -1,7 +1,14 @@
 import keyboard, time, csv, datetime, random
 
+# Приставка текста всплывающих предупреждений
+txt_err = '!!! ОШИБКА !!!\n'
+txt_war = 'ПРЕДУПРЕЖДЕНИЕ !\n'
+txt_suc = 'УСПЕХ !\n'
+
+
 # -Администраторская панель-
 class Admins_data:
+    filename = 'Data/admins.csv'
     info = []
     amount = 0
     changes = 0
@@ -13,9 +20,9 @@ class Admins_data:
     master_login = [['master', '123', 'master login']]
 
     @staticmethod
-    def load_file(name):
+    def load_file():
         try:
-            with open(name, 'r', encoding='utf-8') as f_read:
+            with open(Admins_data.filename, 'r', encoding='utf-8') as f_read:
                 fr = csv.reader(f_read, delimiter=",")
                 Admins_data.info = list(fr)
                 Admins_data.amount = len(Admins_data.info)
@@ -24,14 +31,47 @@ class Admins_data:
             Admins_data.amount = 0
 
     @staticmethod
-    def save_file(name):
-        with open(name, 'w', encoding='utf-8') as f_write:
+    def save_file():
+        with open(Admins_data.filename, 'w', encoding='utf-8') as f_write:
             wr = csv.writer(f_write, lineterminator='\r')
             for i in Admins_data.info:
                 wr.writerow(i)
 
+    @staticmethod
+    def login_search(log):
+        for index in range(0, Admins_data.amount):
+            if log == Admins_data.info[index][0]: return index
+            index += 1
+        return -1  # если возвращается -1, значит логина нету, иначе возвращается индекс логина в списке
+
+    @staticmethod
+    def delete_admin(index):
+        Admins_data.info.pop(index)
+        Admins_data.changes += 1
+
+    @staticmethod
+    def add_admin(log, psw, fio):
+        Admins_data.info.append([log, psw, fio])
+        Admins_data.changes += 1
+        Admins_data.amount += 1
+
+    @staticmethod
+    def change_date(y, m, d):
+        Admins_data.found_ticket[0]['date_out'] = datetime.date(y, m, d)
+
+    @staticmethod
+    def change_status(st):
+        Admins_data.found_ticket[0]['status'] = st
+
+
 def admin_panel():
-    Admins_data.load_file(admins_filename)
+
+    def check_login(l, p, admins):
+        for i in admins:
+            if l == i[0] and p == i[1]: return True
+        return False
+
+    Admins_data.load_file()
     print('\n')
     l = input('Введите логин: ')
     p = input('Введите пароль: ')
@@ -43,10 +83,6 @@ def admin_panel():
     if Admins_data.changes >= 1:
         admin_save_changes()
 
-def check_login(l, p, admins):
-    for i in admins:
-        if l == i[0] and p == i[1]: return True
-    return False
 
 def admin_save_changes():
     yes = {'y', 'Y', 'Н', 'н'}
@@ -57,7 +93,7 @@ def admin_save_changes():
         print('Хотите сохранить изменения? (y/n):')
         key = keyboard.read_key()
         if key in yes:
-            Admins_data.save_file(admins_filename)
+            Admins_data.save_file()
             Admins_data.changes = 0
             clear()
             print(txt_suc+'Изменения внесены успешно!')
@@ -67,12 +103,12 @@ def admin_save_changes():
             Admins_data.changes = 0
             break
 
-def if_no_admins():
+def no_admins():
     print(txt_war+'Не зарегистрировано ни одного администратора')
 
 def admin_spisok():
     clear()
-    if Admins_data.amount == 0: if_no_admins()
+    if Admins_data.amount == 0: no_admins()
     else:
         n = 1
         for i in Admins_data.info:
@@ -82,13 +118,13 @@ def admin_spisok():
 
 def admin_del():
     clear()
-    if Admins_data.amount == 0: if_no_admins()
+    if Admins_data.amount == 0: no_admins()
     else:
         n = input('Введите логин админа для его удаления: ')
-        if len(Admins_data.info) > 1:
-            if admin_login_search(n) != -1:
-                Admins_data.info.pop(admin_login_search(n))
-                Admins_data.changes += 1
+        if Admins_data.amount > 1:
+            ad_log = Admins_data.login_search(n)  # поиск логина в списке, возвращается индекс, иначе -1 если нету
+            if ad_log != -1:
+                Admins_data.delete_admin(ad_log)
                 print(txt_suc+'Удаление произошло успешно!')
             else:
                 print(txt_err+'Искомый логин не найден')
@@ -101,58 +137,51 @@ def admin_add():
         clear()
         print('Регистрация нового администратора')
         log = input('Введите логин: ')
-        if admin_login_search(log) == -1:
+        if Admins_data.login_search(log) == -1:
             psw = input('Введите пароль: ')
             fio = input('Введите ФИО: ')
-            Admins_data.info.append([log, psw, fio])
-            Admins_data.changes += 1
-            Admins_data.amount += 1
+            Admins_data.add_admin(log, psw, fio)
             break
         else:
             print(txt_err+'Введенный логин уже существует')
             press_enter()
             continue
 
-def admin_login_search(log):
-    for index in range(0, len(Admins_data.info)):
-        if log == Admins_data.info[index][0]: return index
-        index += 1
-    return -1   # если возвращается -1, значит логина нету, иначе возвращается индекс логина в списке
-
 def admin_actions():
     k = input('Введите номер квитанции:\n')
-    Admins_data.found_ticket = from_SetTup_to_ListDict(search_ticket(k, 'one'))
-    if len(Admins_data.found_ticket):
-        Tickets_data.load_file(ticket_filename)
+    list_of_found_ticket = from_SetTup_to_ListDict(search_ticket(k, 'one'))
+    if len(list_of_found_ticket):
+        Admins_data.found_ticket = list_of_found_ticket     # фиксируем квитанцию для обработки в админ панели
+        Tickets_data.load_file()
         vivod_menu(admin_actions_menu)
-        Tickets_data.save_ticket()
+        Tickets_data.save_ticket(Admins_data.found_ticket)  # сохраняем изменения квитанции в общий список квитанций
     else:
         print(txt_err + 'Квитанция не найдена')
         press_enter()
 
 
 def admin_change_status():
+    statuses = {1: 'ремонтируется', 2: 'готово', 3: 'выдано клиенту'}
     print('Измените статус ремонта на:')
     print('1 - ремонтируется')
     print('2 - готово')
     print('3 - выдано клиенту')
     t = input()
-    if t == '1':
-        Admins_data.found_ticket[0]['status'] = 'ремонтируется'
-    elif t == '2':
-        Admins_data.found_ticket[0]['status'] = 'готово'
-    elif t == '3':
-        Admins_data.found_ticket[0]['status'] = 'выдано клиенту'
-    clear()
-    print(txt_suc + 'Квитанция после изменения:\n-----')
-    admin_get_info()
+    try:
+        Admins_data.change_status(statuses[int(t)])
+        clear()
+        print(txt_suc + 'Квитанция после изменения:\n-----')
+        admin_get_info()
+    except:
+        print(txt_err+'Неверный выбор')
+        press_enter()
 
 def admin_change_date():
     print('Производится изменение даты выполнения ремонта:')
     d = int(input('Введите число:\n'))
     m = int(input('Введите месяц:\n'))
     y = int(input('Введите год:\n'))
-    Admins_data.found_ticket[0]['date_out'] = datetime.date(y, m, d)
+    Admins_data.change_date(y, m, d)
     clear()
     print(txt_suc+'Квитанция после изменения:\n-----')
     admin_get_info()
@@ -161,33 +190,32 @@ def admin_get_info():
     print_ticket(Admins_data.found_ticket[0])
     press_enter()
 
-def admin_save_ticket_changes():
-    pass
-
 
 # Класс управления квитанциями
 class Tickets_data:
+    filename = 'Data/tickets.csv'
     data = []
     nums = 0
     found_tickets = []
     found_index = 0
 
-    def save_ticket():
-        Tickets_data.data[Tickets_data.found_index] = Admins_data.found_ticket[0]
-        Tickets_data.save_file(ticket_filename)
+    @staticmethod
+    def save_ticket(list_of_ticket_to_save):
+        Tickets_data.data[Tickets_data.found_index] = list_of_ticket_to_save[0]
+        Tickets_data.save_file()
 
     @staticmethod
-    def save_file(name):
-        with open(name, 'w', encoding='utf-8') as f:
+    def save_file():
+        with open(Tickets_data.filename, 'w', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=list(Tickets_data.data[0].keys()), lineterminator='\r')
             writer.writeheader()
             for d in Tickets_data.data:
                 writer.writerow(d)
 
     @staticmethod
-    def load_file(name):
+    def load_file():
         try:
-            with open(name, 'r', encoding='utf-8') as f:
+            with open(Tickets_data.filename, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 Tickets_data.data = []
                 for dict in reader:
@@ -262,7 +290,7 @@ def user_give():
     ticket['status'] = 'ремонтируется'
     Tickets_data.data.append(ticket)
     Tickets_data.nums += 1
-    Tickets_data.save_file(ticket_filename)
+    Tickets_data.save_file()
     press_enter()
 
 def print_ticket(ticket):
@@ -285,13 +313,16 @@ def user_get_info():
         print(txt_err + 'Квитанция не найдена')
         press_enter()
 
-# переводим множество кортежей обратно в список словарей
+# преобразование множество кортежей в список словарей как адаптер к функции search_ticket
 def from_SetTup_to_ListDict(s):
     new_s = []
     for i in list(s):
         new_s.append(dict(i))
     return new_s
 
+# функция поиска квитанций по номеру: если номер нашелся, то функция запоминает ФИО из этой квитанции,
+# и ищет по всей базе все квитанции с заданным ФИО (поиск по заданию)
+# используется set() для ловли дублей одной и той же квитанции, которую нашли по номеру
 def search_ticket(k, flag='one'):
     s = set()
     if k.isdigit(): key = 'num'
@@ -311,18 +342,18 @@ def search_ticket(k, flag='one'):
 # Основные функции -Main-
 def vivod_menu(menu):
     n = 1
-    while n != len(menu):
+    len_menu = len(menu)
+    while n != len_menu:
         clear()
-        for i in range(1, len(menu) + 1):
+        for i in range(1, len_menu + 1):
             print(f'{i} - {menu[i][1]}')
-        # n = input('Введите вариант:')
         print('Введите вариант:')
-        n = str(keyboard.read_key())
-        time.sleep(0.2)                 # задержка 0,1 секунды иначе read_key() считывает дважды
+        n = keyboard.read_key(True)
+        time.sleep(0.2)                 # задержка 0,2 секунды иначе read_key() считывает дважды
         if n.isdigit():
             n = int(n)
-            if n == len(menu): break
-            elif n < 1 or n > len(menu): continue
+            if n == len_menu: break
+            elif n < 1 or n > len_menu: continue
             clear()
             menu.get(n)[0]()
         else:
@@ -334,6 +365,8 @@ def clear():
 
 def press_enter():
     print(input('Нажмите клавишу Enter для продолжения...'))
+    # print('Нажмите клавишу Enter для продолжения...')
+    # keyboard.wait('Enter')
 
 # Менюшки
 main_menu = {1:[user_give, 'Сдать в ремонт'],
@@ -352,15 +385,7 @@ admin_actions_menu = {1:[admin_change_status, 'Изменить статус р�
                       3:[admin_get_info, 'Посмотреть информацию о квитанции'],
                       4:[0, 'Возврат в администраторскую панель']}
 
-# Приставка текста всплывающих предупреждений
-txt_err = '!!! ОШИБКА !!!\n'
-txt_war = 'ПРЕДУПРЕЖДЕНИЕ !\n'
-txt_suc = 'УСПЕХ !\n'
-
-admins_filename = 'Data/admins.csv'
-ticket_filename = 'Data/tickets.csv'
-
 
 # Тело программы
-Tickets_data.load_file(ticket_filename)
+Tickets_data.load_file()
 vivod_menu(main_menu)
