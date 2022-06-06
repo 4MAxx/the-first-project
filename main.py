@@ -19,7 +19,7 @@ class Admins_data:
     # мастер логин, дает возможность входа в админ-панель, при отсутствии файла с администраторами,
     # нельзя проверять наличие файла, и при отсутствии давать доступ по первому входу любого логина-пароля
     # иначе можно получить доступ к админ-панели, удалив файл с логинами
-    master_login = [['master', '123', 'master login']]
+    __master_login = ['master', '123', 'master login']
 
     @staticmethod
     def load_file():
@@ -38,6 +38,16 @@ class Admins_data:
             wr = csv.writer(f_write, lineterminator='\r')
             for i in Admins_data.info:
                 wr.writerow(i)
+
+    @staticmethod
+    def check_login(l, p):
+        if l == Admins_data.__master_login[0] and p == Admins_data.__master_login[1]:
+            return True
+        else:
+            for i in Admins_data.info:
+                if l == i[0] and p == i[1]:
+                    return True
+        return False
 
     @staticmethod
     def login_search(log):
@@ -65,14 +75,18 @@ class Admins_data:
     def change_status(st):
         Admins_data.found_ticket[0]['status'] = st
 
+    @staticmethod
+    def save_admins_changes():
+        Admins_data.save_file()
+        Admins_data.changes = 0
+
+    @staticmethod
+    def undo_admins_changes():
+        Admins_data.changes = 0
+
 
 # Ветка =АДМИН-ПАНЕЛЬ=
 def admin_panel():
-
-    def check_login(l, p, admins):
-        for i in admins:
-            if l == i[0] and p == i[1]: return True
-        return False
 
     def admin_save_changes():
         yes = {'y', 'Y', 'Н', 'н'}
@@ -83,22 +97,21 @@ def admin_panel():
             print('Хотите сохранить изменения? (y/n):')
             key = keyboard.read_key(True)
             if key in yes:
-                Admins_data.save_file()
-                Admins_data.changes = 0
+                Admins_data.save_admins_changes()
                 clear()
                 print(txt_suc + 'Изменения внесены успешно!')
                 press_enter()
                 break
             elif key in no:
-                Admins_data.changes = 0
+                Admins_data.undo_admins_changes()
                 break
 
     Admins_data.load_file()
     print('\n')
     l = input('Введите логин: ')
     p = input('Введите пароль: ')
-    if check_login(l, p, Admins_data.info) or check_login(l, p, Admins_data.master_login):
-        vivod_menu(admin_menu)                                                          # вход / выход  =АДМИН-ПАНЕЛЬ=
+    if Admins_data.check_login(l, p):
+        vivod_menu(admin_menu)              # вход / выход  =АДМИН-ПАНЕЛЬ=
     else:
         print(txt_err+'Введенные данные не верны')
         press_enter()
@@ -185,9 +198,9 @@ def admin_change_status():
 
 def admin_change_date():
     print('Производится изменение даты выполнения ремонта:')
-    d = int(input('Введите число:\n'))
-    m = int(input('Введите месяц:\n'))
-    y = int(input('Введите год:\n'))
+    d = int(input('Введите число (ЧЧ):\n'))
+    m = int(input('Введите месяц (ММ):\n'))
+    y = int(input('Введите год (ГГГГ):\n'))
     Admins_data.change_date(y, m, d)
     clear()
     print(txt_suc+'Квитанция после изменения:\n-----')
