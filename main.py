@@ -212,7 +212,8 @@ class Tickets_data:
         # функция поиска квитанций по параметру (номеру или фио - определяется автоматически)
         # если по номеру квитанция нашлась, то запоминается ФИО из этой квитанции,
         # и происходит поиск по всей базе квитанций с этим ФИО (поиск по заданию)
-        # используется set() для ловли дублей при задвоении квитанции, которую нашли по номеру
+        # используется set() для исключения дублей при рекурсивном поиске по ФИО с квитанцией по номеру,
+        # с флагом 'one' - ищет только номер, 'all' - поиск и номера и всех квитанций с одним ФИО
         def search(k, f='one'):
             s = set()
             if k.isdigit():
@@ -230,13 +231,17 @@ class Tickets_data:
             if key == 'num' and s and f == 'all': s.update(search(i['fio']))
             return s  # возвращается сет с кортежами всех найденных квитанций (поиск по номеру и по фио) без повторов
 
-        # преобразование сета кортежей в список словарей как адаптер к функции search
-        new_s = []
-        for i in list(search(param, flag)):
-            new_s.append(dict(i))
-
-        Tickets_data.found_tickets = new_s
-        return new_s if len(new_s) != 0 else 0
+        search = list(search(param, flag))
+        if search:
+            # преобразование сета кортежей в список словарей как адаптер к функции search
+            new_set = []
+            for i in search:
+                new_set.append(dict(i))
+            # Сортировка списка словарей по номеру квитанции (если нужно, то меняем по другому признаку)
+            new_s_sorted = sorted(new_set, key=lambda x: x['num'])
+            Tickets_data.found_tickets = new_s_sorted
+            return new_s_sorted         # Возвращается список словарей найденныйх квитанций (сортированный)
+        return 0                        # Возвращается 0 если не найдено квитанций с заданным параметром
 
     @staticmethod
     def save_ticket(list_of_ticket_to_save):
