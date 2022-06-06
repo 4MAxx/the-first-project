@@ -355,11 +355,16 @@ def user_get_info():
 
 
 def print_ticket(ticket):
+
+    def date_print(date):
+        str = date.split('-')
+        return '-'.join(str[::-1])
+
     print(f'Квитанция # {ticket["num"]}:')
     print(f'ФИО:          {ticket["fio"]}')
     print(f'Техника:      {ticket["type"]}')
-    print(f'Дата приемки: {ticket["date_in"]}')
-    print(f'Дата выдачи:  {ticket["date_out"]}')
+    print(f'Дата приемки: {date_print(ticket["date_in"])}')
+    print(f'Дата выдачи:  {date_print(ticket["date_out"])}')
     print(f'Статус:       {ticket["status"]}')
 
 
