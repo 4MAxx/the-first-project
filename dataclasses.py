@@ -131,6 +131,7 @@ class Tickets_data:
     def add_ticket(ticket):
         Tickets_data.data.append(ticket)
         Tickets_data.nums += 1
+        Tickets_data.save_file()
 
     @staticmethod
     def save_file():

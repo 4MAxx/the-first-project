@@ -3,10 +3,11 @@ from dataclasses import Tickets_data
 
 # Класс вывода вывода на консоль общего пользования
 class Output:
-    # Наименование всплывающих предупреждений
-    txt_err = '!!! ОШИБКА !!!\n'
-    txt_war = 'ПРЕДУПРЕЖДЕНИЕ !\n'
-    txt_suc = 'УСПЕХ !\n'
+    txt_err = '!!! ОШИБКА !!!\n'                # Наименование всплывающих предупреждений
+    txt_war = 'ПРЕДУПРЕЖДЕНИЕ !!!\n'
+    txt_suc = 'УСПШНО !!!\n'
+
+    txt_line = '='*35
 
     @staticmethod
     def clear():
@@ -24,11 +25,11 @@ class Output:
         len_menu = len(menu)
         while n != len_menu:
             Output.clear()
-            print(f'{title}\n'+'='*35)
+            print(f'{title}\n'+Output.txt_line)
             for i in range(1, len_menu + 1):
                 print(f'{i} - {menu[i][1]}')
             print('Введите вариант:')
-            n = keyboard.read_key(True)
+            n = keyboard.read_key()
             time.sleep(0.2)  # задержка 0,2 секунды
             if n.isdigit():
                 n = int(n)
@@ -67,17 +68,32 @@ class Output:
 class Tech:
     typ = ''
     def __init__(self, mark='', dam=''):
-        if mark == '': self.mark = input(f'Введите марку {self.typ}а: ')
-        else: self.mark = mark
-        if dam == '': self.damage = input(f'Введите поломку {self.typ}а: ')
-        else: self.damage = dam
+        if mark == '':
+            str = ''
+            while not str or str.isspace():
+                str = input(f'Введите марку {self.typ}а: ')
+            self.mark = str
+        else:
+            self.mark = mark
+        if dam == '':
+            str = ''
+            while not str or str.isspace():
+                str = input(f'Введите поломку {self.typ}а: ')
+            self.damage = str
+        else:
+            self.damage = dam
 
 class Phone(Tech):
     typ = 'телефон'
     def __init__(self, mark='', dam='', os=''):
         super().__init__(mark, dam)
-        if os == '': self.os = input('Введите операционную систему: ')
-        else: self.os = os
+        if os == '':
+            str = ''
+            while not str or str.isspace():
+                str = input('Введите операционную систему: ')
+            self.os = str
+        else:
+            self.os = os
 
     def __str__(self):
         return '-'.join([self.typ,self.mark,self.os,self.damage])
@@ -86,8 +102,13 @@ class Note(Phone):
     typ = 'ноутбук'
     def __init__(self, mark='', dam='', os='', year=''):
         super().__init__(mark, dam, os)
-        if year == '': self.year = input(f'Введите год выпуска {self.typ}а: ')
-        else: self.year = year
+        if year == '':
+            str = ''
+            while not str or str.isspace():
+                str = input(f'Введите год выпуска {self.typ}а: ')
+            self.year = str
+        else:
+            self.year = year
 
     def __str__(self):
         return '-'.join([self.typ,self.mark,self.os,self.year,self.damage])
@@ -96,8 +117,13 @@ class TV(Tech):
     typ = 'телевизор'
     def __init__(self, mark='', dam='', diag=''):
         super().__init__(mark, dam)
-        if diag == '': self.diag = input(f'Введите диагональ {self.typ}а: ')
-        else: self.diag = diag
+        if diag == '':
+            str = ''
+            while not str or str.isspace():
+                str = input(f'Введите диагональ {self.typ}а: ')
+            self.diag = str
+        else:
+            self.diag = diag
 
     def __str__(self):
         return '-'.join([self.typ,self.mark,self.diag,self.damage])
@@ -105,30 +131,35 @@ class TV(Tech):
 
 # Класс пользовательских задач
 class User:
-
     @staticmethod
     def user_give():
         ticket = {'num': '', 'fio': '', 'type': '', 'date_in': str(datetime.date.today()),
                   'date_out': str(datetime.date.today() + datetime.timedelta(days=random.randint(1, 5))), 'status': ''}
         Output.clear()
-        print('Регистрация ремонта')
+        print('Регистрация ремонта\n'+Output.txt_line)
         ticket['num'] = str(Tickets_data.nums + 1)
         ticket['fio'] = input('Введите ФИО: ')
-        print('Какой тип техники сдается в ремонт?:')
-        print('1 - телефон')
-        print('2 - ноутбук')
-        print('3 - телевизор')
-        t = input()
-        if t == '1': ticket['type'] = Phone()
-        elif t == '2': ticket['type'] = Note()
-        elif t == '3': ticket['type'] = TV()
-        ticket['status'] = 'принята в ремонт'
-        Output.clear()
-        print('Техника принята в ремонт\n')
-        Output.print_ticket(ticket)
-        ticket['status'] = 'ремонтируется'
-        Tickets_data.add_ticket(ticket)
-        Tickets_data.save_file()
+        if ticket['fio'] and not ticket['fio'].isspace():
+            print('Какой тип техники сдается в ремонт?:')
+            print('1 - телефон')
+            print('2 - ноутбук')
+            print('3 - телевизор')
+            t = input()
+            if t and t in '123':
+                if t == '1': ticket['type'] = Phone()
+                elif t == '2': ticket['type'] = Note()
+                elif t == '3': ticket['type'] = TV()
+                ticket['status'] = 'принята в ремонт'
+                Output.clear()
+                print(Output.txt_suc+'Техника принята в ремонт\n'+Output.txt_line)
+                Output.print_ticket(ticket)
+                ticket['status'] = 'ремонтируется'
+                Tickets_data.add_ticket(ticket)
+            else:
+                Output.clear()
+                print(Output.txt_err + 'Неверный выбор')
+        else:
+            print(Output.txt_err + 'ФИО не должно быть пустым')
         Output.press_enter()
 
     @staticmethod

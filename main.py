@@ -5,7 +5,7 @@ import keyboard
 
 class Adminka:
     temp_login = ''
-    # Ветка =АДМИН-ПАНЕЛЬ=
+                                                # Ветка =АДМИН-ПАНЕЛЬ=
     @staticmethod
     def admin_panel():
 
@@ -91,7 +91,7 @@ class Adminka:
                 continue
 
 
-    # Ветка =админ-панели= \ =ДЕЙСТВИЯ С КВИТАНЦИЯМИ=
+                                        # Ветка =админ-панели= \ =ДЕЙСТВИЯ С КВИТАНЦИЯМИ=
     @staticmethod
     def admin_actions():
         k = input('Введите номер квитанции:\n')
@@ -117,7 +117,7 @@ class Adminka:
         try:
             Admins_data.change_status(statuses[int(t)])
             Output.clear()
-            print(Output.txt_suc + 'Квитанция после изменения:\n'+'='*25)
+            print(Output.txt_suc + 'Квитанция после изменения:\n'+Output.txt_line)
             Adminka.admin_get_info()
         except:
             print(Output.txt_err+'Неверный выбор')
