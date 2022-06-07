@@ -1,4 +1,5 @@
-import csv
+import csv, bcrypt
+from datetime import date
 
 # Класс управления данными админов
 class Admins_data:
@@ -11,8 +12,8 @@ class Admins_data:
 
     # мастер логин, дает возможность входа в админ-панель, при отсутствии файла с администраторами,
     # нельзя проверять наличие файла, и при отсутствии давать доступ по первому входу любого логина-пароля
-    # иначе можно получить доступ к админ-панели, удалив файл с логинами
-    __master_login = ['master', '123', 'master login']
+    # иначе можно получить доступ к админ-панели, удалив файл с логинами он ту сри
+    __master_login = ['master', '$2b$12$piSxjbAfRwdCcHn1a421wOtdBUKav1CiH3BgVMZugnnB3ekJScsE6', 'master login']
 
     @staticmethod
     def load_file():
@@ -33,12 +34,20 @@ class Admins_data:
                 wr.writerow(i)
 
     @staticmethod
+    def compare(psw, hashed):
+        try:
+            result = bcrypt.checkpw(psw.encode(), hashed.encode())
+        except:
+            return False
+        return result
+
+    @staticmethod
     def check_login(l, p):
-        if l == Admins_data.__master_login[0] and p == Admins_data.__master_login[1]:
+        if l == Admins_data.__master_login[0] and Admins_data.compare(p, Admins_data.__master_login[1]):
             return True
         else:
             for i in Admins_data.info:
-                if l == i[0] and p == i[1]:
+                if l == i[0] and Admins_data.compare(p, i[1]):
                     return True
         return False
 
@@ -52,17 +61,22 @@ class Admins_data:
     @staticmethod
     def delete_admin(index):
         Admins_data.info.pop(index)
+        Admins_data.amount -= 1             # исправлено в версии 2.3
         Admins_data.changes += 1
 
     @staticmethod
+    def hashed(p):
+        return bcrypt.hashpw(p.encode(), bcrypt.gensalt()).decode()
+
+    @staticmethod
     def add_admin(log, psw, fio):
-        Admins_data.info.append([log, psw, fio])
+        Admins_data.info.append([log, Admins_data.hashed(psw), fio])
         Admins_data.changes += 1
         Admins_data.amount += 1
 
     @staticmethod
     def change_date(y, m, d):
-        Admins_data.found_ticket[0]['date_out'] = str(datetime.date(y, m, d))
+        Admins_data.found_ticket[0]['date_out'] = str(date(y, m, d))
 
     @staticmethod
     def change_status(st):

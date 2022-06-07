@@ -53,7 +53,7 @@ class Adminka:
         else:
             n = 1
             for i in Admins_data.info:
-                print(n,' |', ', '.join(i))
+                print(n,' |', ', '.join([i[0], i[2]]))
                 n += 1
         Output.press_enter()
 
