@@ -19,11 +19,12 @@ class Output:
         # keyboard.wait('Enter')
 
     @staticmethod
-    def menu(menu):
+    def menu(menu, title='Добро пожаловать в мастерскую !'):
         n = 1
         len_menu = len(menu)
         while n != len_menu:
             Output.clear()
+            print(f'{title}\n'+'='*35)
             for i in range(1, len_menu + 1):
                 print(f'{i} - {menu[i][1]}')
             print('Введите вариант:')

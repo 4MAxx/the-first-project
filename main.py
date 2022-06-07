@@ -4,7 +4,7 @@ import keyboard
 
 
 class Adminka:
-
+    temp_login = ''
     # Ветка =АДМИН-ПАНЕЛЬ=
     @staticmethod
     def admin_panel():
@@ -16,7 +16,7 @@ class Adminka:
                 Output.clear()
                 print(Output.txt_war + 'Список администраторов был редактирован')
                 print('Хотите сохранить изменения? (y/n):')
-                key = keyboard.read_key(True)
+                key = keyboard.read_key()
                 if key in yes:
                     Admins_data.save_admins_changes()
                     Output.clear()
@@ -32,7 +32,10 @@ class Adminka:
         l = input('Введите логин: ')
         p = input('Введите пароль: ')
         if Admins_data.check_login(l, p):
-            Output.menu(Menu_Trees.admin_menu)              # вход / выход  =АДМИН-ПАНЕЛЬ=
+            Adminka.temp_login = l
+                                                # вход / выход  =АДМИН-ПАНЕЛЬ=
+            Output.menu(Menu_Trees.admin_menu, f'Вы вошли под логином: < {Adminka.temp_login} >')
+            Adminka.temp_login = ''
         else:
             print(Output.txt_err+'Введенные данные не верны')
             Output.press_enter()
@@ -91,13 +94,14 @@ class Adminka:
     # Ветка =админ-панели= \ =ДЕЙСТВИЯ С КВИТАНЦИЯМИ=
     @staticmethod
     def admin_actions():
-        # Tickets_data.load_file()                                  # загружаем данные квитанций из файла
         k = input('Введите номер квитанции:\n')
         list_of_found_tickets = Tickets_data.search_ticket(k, 'one')
         if list_of_found_tickets:
-            Admins_data.found_ticket = list_of_found_tickets        # фиксируем квитанцию для обработки в админ панели
-            Output.menu(Menu_Trees.admin_actions_menu)                          # вход/выход =ДЕЙСТВИЯ С КВИТАНЦИЯМИ=
-            Tickets_data.save_ticket(Admins_data.found_ticket[0])   # сохраняем изменения квитанции в общий список квитанций
+            Admins_data.found_ticket = list_of_found_tickets
+                                                                            # вход/выход =ДЕЙСТВИЯ С КВИТАНЦИЯМИ=
+            Output.menu(Menu_Trees.admin_actions_menu,
+                        f'Квитанция # {k} ({Admins_data.found_ticket[0]["fio"]})')
+            Tickets_data.save_ticket(Admins_data.found_ticket[0])
         else:
             print(Output.txt_err + 'Квитанция не найдена')
             Output.press_enter()
@@ -113,7 +117,7 @@ class Adminka:
         try:
             Admins_data.change_status(statuses[int(t)])
             Output.clear()
-            print(Output.txt_suc + 'Квитанция после изменения:\n-----')
+            print(Output.txt_suc + 'Квитанция после изменения:\n'+'='*25)
             Adminka.admin_get_info()
         except:
             print(Output.txt_err+'Неверный выбор')
@@ -143,15 +147,15 @@ class Menu_Trees():
                  3:[Adminka.admin_panel, 'Зайти в администраторскую панель'],
                  4:[0, 'Выход']}
 
-    admin_menu = {1:[Adminka.admin_spisok, 'Отобразить список всех админов'],
-                  2:[Adminka.admin_del, 'Удалить админа из списка'],
-                  3:[Adminka.admin_add, 'Добавить нового админа'],
-                  4:[Adminka.admin_actions, 'Действия с квитанциями'],
+    admin_menu = {2:[Adminka.admin_spisok, 'Отобразить список всех админов'],
+                  3:[Adminka.admin_del, 'Удалить админа из списка'],
+                  4:[Adminka.admin_add, 'Добавить нового админа'],
+                  1:[Adminka.admin_actions, 'Действия с квитанциями'],
                   5:[0, 'Выход из администраторской панели']}
 
-    admin_actions_menu = {1:[Adminka.admin_change_status, 'Изменить статус ремонта'],
+    admin_actions_menu = {3:[Adminka.admin_change_status, 'Изменить статус ремонта'],
                           2:[Adminka.admin_change_date, 'Изменить дату выполнения ремонта'],
-                          3:[Adminka.admin_get_info, 'Посмотреть информацию о квитанции'],
+                          1:[Adminka.admin_get_info, 'Посмотреть информацию о квитанции'],
                           4:[0, 'Возврат в администраторскую панель']}
 
 
