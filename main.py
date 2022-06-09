@@ -1,6 +1,5 @@
 from user_n_output import Output, User
 from dataclasses import Admins_data, Tickets_data
-import keyboard
 
 
 class Adminka:
@@ -16,7 +15,7 @@ class Adminka:
                 Output.clear()
                 print(Output.txt_war + 'Список администраторов был редактирован')
                 print('Хотите сохранить изменения? (y/n):')
-                key = keyboard.read_key()
+                key = Output.readkey()
                 if key in yes:
                     Admins_data.save_admins_changes()
                     Output.clear()
@@ -28,19 +27,19 @@ class Adminka:
                     break
 
         Admins_data.load_file()
-        print('\n')
+        Output.clear()
         l = input('Введите логин: ')
         p = input('Введите пароль: ')
         if Admins_data.check_login(l, p):
             Adminka.temp_login = l
-                                                # вход / выход  =АДМИН-ПАНЕЛЬ=
+                                            # вход / выход  =АДМИН-ПАНЕЛЬ=
             Output.menu(Menu_Trees.admin_menu, f'Вы вошли под логином: < {Adminka.temp_login} >')
             Adminka.temp_login = ''
         else:
             print(Output.txt_err+'Введенные данные не верны')
             Output.press_enter()
         if Admins_data.changes >= 1:
-            admin_save_changes()                # Если менялся список админов, то проводим процедуру сохранения изменений
+            admin_save_changes()            # Если менялся список админов, то проводим процедуру сохранения изменений
 
     @staticmethod
     def no_admins():
@@ -94,13 +93,15 @@ class Adminka:
                                         # Ветка =админ-панели= \ =ДЕЙСТВИЯ С КВИТАНЦИЯМИ=
     @staticmethod
     def admin_actions():
+        Output.clear()
         k = input('Введите номер квитанции:\n')
         list_of_found_tickets = Tickets_data.search_ticket(k, 'one')
         if list_of_found_tickets:
             Admins_data.found_ticket = list_of_found_tickets
                                                                             # вход/выход =ДЕЙСТВИЯ С КВИТАНЦИЯМИ=
             Output.menu(Menu_Trees.admin_actions_menu,
-                        f'Квитанция # {k} ({Admins_data.found_ticket[0]["fio"]})')
+                        f'Квитанция # {k} - {Admins_data.found_ticket[0]["fio"]} '
+                        f'(срок: {Admins_data.found_ticket[0]["date_out"]}) - {Admins_data.found_ticket[0]["status"]}')
             Tickets_data.save_ticket(Admins_data.found_ticket[0])
         else:
             print(Output.txt_err + 'Квитанция не найдена')
@@ -108,6 +109,7 @@ class Adminka:
 
     @staticmethod
     def admin_change_status():
+        Output.clear()
         statuses = {1: 'ремонтируется', 2: 'готово', 3: 'выдано клиенту'}
         print('Измените статус ремонта на:')
         print('1 - ремонтируется')
@@ -125,6 +127,7 @@ class Adminka:
 
     @staticmethod
     def admin_change_date():
+        Output.clear()
         print('Производится изменение даты выполнения ремонта:')
         d = int(input('Введите число (ЧЧ):\n'))
         m = int(input('Введите месяц (ММ):\n'))
@@ -136,6 +139,7 @@ class Adminka:
 
     @staticmethod
     def admin_get_info():
+        Output.clear()
         Output.print_ticket(Admins_data.found_ticket[0])
         Output.press_enter()
 
@@ -145,18 +149,18 @@ class Menu_Trees():
     main_menu = {1:[User.user_give, 'Сдать в ремонт'],
                  2:[User.user_get_info, 'Просмотреть информацию'],
                  3:[Adminka.admin_panel, 'Зайти в администраторскую панель'],
-                 4:[0, 'Выход']}
+                 0:[0, 'Выход']}
 
     admin_menu = {2:[Adminka.admin_spisok, 'Отобразить список всех админов'],
                   3:[Adminka.admin_del, 'Удалить админа из списка'],
                   4:[Adminka.admin_add, 'Добавить нового админа'],
                   1:[Adminka.admin_actions, 'Действия с квитанциями'],
-                  5:[0, 'Выход из администраторской панели']}
+                  0:[0, 'Выход из администраторской панели']}
 
     admin_actions_menu = {3:[Adminka.admin_change_status, 'Изменить статус ремонта'],
                           2:[Adminka.admin_change_date, 'Изменить дату выполнения ремонта'],
                           1:[Adminka.admin_get_info, 'Посмотреть информацию о квитанции'],
-                          4:[0, 'Возврат в администраторскую панель']}
+                          0:[0, 'Возврат в администраторскую панель']}
 
 
 # Тело программы
