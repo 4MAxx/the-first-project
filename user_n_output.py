@@ -102,16 +102,16 @@ class Tech:
     typ = ''
     def __init__(self, mark='', dam=''):
         if mark == '':
-            str = ''
-            while not str or str.isspace():
-                str = input(f'Введите марку {self.typ}а: ')
+            str = mystr('')
+            while str.is_empty():                       # Нельзя ввести пустые данные
+                str = mystr(input(f'Введите марку {self.typ}а: '))
             self.mark = str
         else:
             self.mark = mark
         if dam == '':
-            str = ''
-            while not str or str.isspace():
-                str = input(f'Введите поломку {self.typ}а: ')
+            str = mystr('')
+            while str.is_empty():                       # Нельзя ввести пустые данные
+                str = mystr(input(f'Введите поломку {self.typ}а: '))
             self.damage = str
         else:
             self.damage = dam
@@ -121,9 +121,9 @@ class Phone(Tech):
     def __init__(self, mark='', dam='', os=''):
         super().__init__(mark, dam)
         if os == '':
-            str = ''
-            while not str or str.isspace():
-                str = input('Введите операционную систему: ')
+            str = mystr('')
+            while str.is_empty():                       # Нельзя ввести пустые данные
+                str = mystr(input('Введите операционную систему: '))
             self.os = str
         else:
             self.os = os
@@ -136,9 +136,9 @@ class Note(Phone):
     def __init__(self, mark='', dam='', os='', year=''):
         super().__init__(mark, dam, os)
         if year == '':
-            str = ''
-            while not str or str.isspace():
-                str = input(f'Введите год выпуска {self.typ}а: ')
+            str = mystr('')                             # Нельзя ввести пустые данные или не цифры
+            while str.is_empty() or not str.isdigit() or len(str) != 4:
+                str = mystr(input(f'Введите год выпуска (ГГГГ) {self.typ}а: '))
             self.year = str
         else:
             self.year = year
@@ -151,15 +151,37 @@ class TV(Tech):
     def __init__(self, mark='', dam='', diag=''):
         super().__init__(mark, dam)
         if diag == '':
-            str = ''
-            while not str or str.isspace():
-                str = input(f'Введите диагональ {self.typ}а: ')
+            str = mystr('')
+            while str.is_empty() or not str.isdigit() or len(str) > 2:      # Нельзя ввести пустые данные или не цифры
+                str = mystr(input(f'Введите диагональ {self.typ}а: '))
             self.diag = str
         else:
             self.diag = diag
 
     def __str__(self):
         return '-'.join([self.typ,self.mark,self.diag,self.damage])
+
+
+# Класс c методами проверок строк, адаптированные под цели программы на базе класса str()
+class mystr(str):
+    # Функция проверки на наличие цифр в строке (если хотябы одна есть, то возвращает True)
+    def have_digit(self):
+        for i in self:
+            if i.isdigit():
+                return True
+        return False
+
+    # Функция проверки на пустотю строку или строку с одними пробелами
+    def is_empty(self):
+        if not self or self.isspace():
+            return True
+        return False
+
+    # Функция совмещающая в себя 2 проверки (на пустоту и цифры) - если хоть одна проверка True, то строка не валидна
+    def is_valid(self):
+        if self.is_empty() or self.have_digit():
+            return False
+        return True
 
 
 # Класс пользовательских задач
@@ -171,8 +193,10 @@ class User:
         Output.clear()
         print('Регистрация ремонта\n'+Output.txt_line)
         ticket['num'] = str(Tickets_data.nums + 1)
-        ticket['fio'] = input('Введите ФИО: ')
-        if ticket['fio'] and not ticket['fio'].isspace():
+        ticket['fio'] = mystr(input('Введите ФИО: '))   # оборачиваем новым классом mystr(), наследованный от str()
+                                                        # класс mystr() имеет адаптированные методы проверки
+        # При условии что ФИО не пустое и не содержит цифры - продолжаем регистрацию
+        if ticket['fio'].is_valid():
             print('Какой тип техники сдается в ремонт?:')
             print('1 - телефон')
             print('2 - ноутбук')
@@ -189,10 +213,9 @@ class User:
                 ticket['status'] = 'ремонтируется'
                 Tickets_data.add_ticket(ticket)
             else:
-                Output.clear()
                 print(Output.txt_err + 'Неверный выбор')
         else:
-            print(Output.txt_err + 'ФИО не должно быть пустым')
+            print(Output.txt_err + 'ФИО не должно быть пустым или содержать цифры')
         Output.press_enter()
 
     @staticmethod                                       # Функционал при выборе =Просмотреть информацию=

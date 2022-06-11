@@ -1,4 +1,4 @@
-from user_n_output import Output, User
+from user_n_output import Output, User, mystr
 from dataclasses import Admins_data, Tickets_data
 
 # Класс интерфейса и функционала Админ-панели
@@ -74,22 +74,78 @@ class Adminka:
                 print(Output.txt_war+'Удаление единственного админа невозможно')
         Output.press_enter()
 
-    @staticmethod                           # Метод добавления админа (примет логин, если нету в базе)
+    @staticmethod                           # Метод добавления админа
     def admin_add():
-        while True:
+
+        def check_psw(psw, psw2):           # Функция проверки пароля на соответствие требованиям безопасности
+            # Test 1                        # Возвращает либо True, либо текст ошибки
+            if '123' in psw or 'password' in psw:
+                return 'Пароль слишком простой!'
+            # Test 2
+            if psw != psw2:
+                return 'Введенные пароли различаются'
+            # Test 3
+            up = 0
+            low = 0
+            symb_str = '%@#$&*!~'
+            digit = 0
+            symb = 0
+            for i in psw:
+                if i.isupper(): up += 1
+                if i.islower(): low += 1
+                if i.isdigit(): digit += 1
+            for i in symb_str:
+                symb += psw.count(i)
+            # Main test
+            if up >= 1 and up + low >= 3 and digit >= 1 and symb >= 1 and 6 <= len(psw):
+                return True
+            else:
+                return 'Пароль не соответствует требованиям безопасности!'
+
+
+        while True:                         # Тело метода
             Output.clear()
             print('Регистрация нового администратора')
-            log = input('Введите логин: ')
-            if Admins_data.login_search(log) == -1:
-                psw = input('Введите пароль: ')
-                fio = input('Введите ФИО: ')
-                Admins_data.add_admin(log, psw, fio)
-                break
+            log = mystr('')                                 # оборачиваем новым классом mystr(), наследованный от str()
+                                                            # класс mystr() имеет адаптированные методы проверки
+            # Препятствуем вводу пустого логина (должны быть данные)
+            log = mystr(input('Введите логин: '))
+            if log.is_empty():
+                continue
+            # Проверка логина на наличие в базе админов
+            if Admins_data.login_search(log) == -1:         # продолжаем регистрацию, если такого логина нету в базе
+                # Проверяем пароль на соответствие безопасности
+                while True:
+                    print('\nТребования к паролю, минимум: 1 цифра, 1 заглавная, 1 спец-символ (%@#$&*!~), 6 разрядов')
+                    psw = input('Введите пароль: ')
+                    psw2 = input('Подтвердите пароль: ')
+                    check = check_psw(psw, psw2)
+                    if check_psw(psw, psw2) == True:        # Если пароль соответствует требованиям, проходим дальше
+                        flag_pass = True
+                        break
+                    else:
+                        print(Output.txt_err + check)       # Вывод в консоль текста ошибки не соответствия пароля
+                        Output.press_enter()
+                        Output.clear()
+                        flag_pass = False               # Если пароль не соответствует, начинаем регистрацию сначала
+                        break
+
+                if flag_pass:
+                    fio = mystr('')
+                    # Препятствуем вводу пустого ФИО (должны быть не пустые данные, в которых не должно быть цифр)
+                    while not fio.is_valid():
+                        fio = mystr(input('Введите ФИО: '))
+
+                    # После всех проверок записываем данные нового админа в базу
+                    Admins_data.add_admin(log, psw, fio)
+                    print(Output.txt_suc+'Регистрация администратора произошла успешно')
+                    print(f'Логин:{log}, ФИО: {fio}')
+                    Output.press_enter()
+                    break
             else:
                 print(Output.txt_err+'Введенный логин уже существует')
                 Output.press_enter()
                 continue
-
 
                                         # Ветка =админ-панели= \ =ДЕЙСТВИЯ С КВИТАНЦИЯМИ=
     @staticmethod
@@ -120,7 +176,7 @@ class Adminka:
         try:
             Admins_data.change_status(statuses[int(t)])
             Output.clear()
-            print(Output.txt_suc + 'Квитанция после изменения:\n'+Output.txt_line)
+            print(Output.txt_suc + 'Квитанция после изменения:\n' + Output.txt_line)
             Adminka.admin_get_info()
         except:
             print(Output.txt_err+'Неверный выбор')
@@ -130,17 +186,25 @@ class Adminka:
     def admin_change_date():
         Output.clear()
         print('Производится изменение даты выполнения ремонта:')
-        d = int(input('Введите число (ЧЧ):\n'))
-        m = int(input('Введите месяц (ММ):\n'))
-        y = int(input('Введите год (ГГГГ):\n'))
-        Admins_data.change_date(y, m, d)
-        Output.clear()
-        print(Output.txt_suc+'Квитанция после изменения:\n-----')
-        Adminka.admin_get_info()
+        try:
+            d = int(input('Введите число (ЧЧ):\n'))
+            m = int(input('Введите месяц (ММ):\n'))
+            y = input('Введите год (ГГГГ):\n')
+            if len(y) < 4:                  # Если год введен не 4-мя цифрами, то вызывается ошибка
+                raise ValueError
+            else:
+                y = int(y)
+            Admins_data.change_date(y, m, d)
+            Output.clear()
+            print(Output.txt_suc + 'Квитанция после изменения:\n' + Output.txt_line)
+            Adminka.admin_get_info()
+        except:
+            print(Output.txt_err + 'Ошибка ввода даты')
+            Output.press_enter()
+
 
     @staticmethod                           # Вывод в консоль информации о квитанции
     def admin_get_info():
-        Output.clear()
         Output.print_ticket(Admins_data.found_ticket[0])
         Output.press_enter()
 
