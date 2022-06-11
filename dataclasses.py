@@ -3,11 +3,11 @@ from datetime import date
 
 # Класс управления данными админов
 class Admins_data:
-    filename = 'Data/admins.csv'
-    info = []
-    amount = 0
-    changes = 0
-    found_ticket = []
+    filename = 'Data/admins.csv'        # имя файла с админами
+    info = []                           # в атрибут загружается список админов (список списков)
+    amount = 0                          # количество админов в списке (определяется при загрузке из файла)
+    changes = 0                         # маркер изменения списка админов (меняется при редактировании)
+    found_ticket = []                   # фиксируется найденная квитанция при действиях с квитанциями (список словарей)
     # found_index = 0
 
     # мастер логин, дает возможность входа в админ-панель, при отсутствии файла с администраторами,
@@ -15,7 +15,7 @@ class Admins_data:
     # иначе можно получить доступ к админ-панели, удалив файл с логинами он ту сри
     __master_login = ['master', '$2b$12$piSxjbAfRwdCcHn1a421wOtdBUKav1CiH3BgVMZugnnB3ekJScsE6', 'master login']
 
-    @staticmethod
+    @staticmethod                           # загрузка данных админов из файла (список списков)
     def load_file():
         try:
             with open(Admins_data.filename, 'r', encoding='utf-8') as f_read:
@@ -26,14 +26,14 @@ class Admins_data:
             Admins_data.info = []
             Admins_data.amount = 0
 
-    @staticmethod
+    @staticmethod                           # запись данных админов в файл
     def save_file():
         with open(Admins_data.filename, 'w', encoding='utf-8') as f_write:
             wr = csv.writer(f_write, lineterminator='\r')
             for i in Admins_data.info:
                 wr.writerow(i)
 
-    @staticmethod
+    @staticmethod                           # Сравниваем введенный пароль с хэшем из базы админов
     def compare(psw, hashed):
         try:
             result = bcrypt.checkpw(psw.encode(), hashed.encode())
@@ -41,7 +41,7 @@ class Admins_data:
             return False
         return result
 
-    @staticmethod
+    @staticmethod                           # Проверяем правильность введенных данных (логин,пароль) при логине админа
     def check_login(l, p):
         if l == Admins_data.__master_login[0] and Admins_data.compare(p, Admins_data.__master_login[1]):
             return True
@@ -51,7 +51,7 @@ class Admins_data:
                     return True
         return False
 
-    @staticmethod
+    @staticmethod               # Поиск логина в базе (проверка при регистрации админа, исключить дубли логина админов)
     def login_search(log):
         for index in range(0, Admins_data.amount):
             if log == Admins_data.info[index][0]: return index
@@ -59,53 +59,55 @@ class Admins_data:
         return -1  # если возвращается -1, значит логина нету, иначе возвращается индекс логина в списке
 
     @staticmethod
-    def delete_admin(index):
+    def delete_admin(index):                # удаление админа из базы
         Admins_data.info.pop(index)
         Admins_data.amount -= 1             # исправлено в версии 2.3
         Admins_data.changes += 1
 
-    @staticmethod
+    @staticmethod                           # хэширование пароля админа
     def hashed(p):
         return bcrypt.hashpw(p.encode(), bcrypt.gensalt()).decode()
 
-    @staticmethod
+    @staticmethod                           # добавление админа в базу
     def add_admin(log, psw, fio):
         Admins_data.info.append([log, Admins_data.hashed(psw), fio])
         Admins_data.changes += 1
         Admins_data.amount += 1
 
-    @staticmethod
+    @staticmethod                           # изменение даты выдачи квитанции
     def change_date(y, m, d):
         Admins_data.found_ticket[0]['date_out'] = str(date(y, m, d))
 
-    @staticmethod
+    @staticmethod                           # изменение статуса квитанции
     def change_status(st):
         Admins_data.found_ticket[0]['status'] = st
 
-    @staticmethod
+    @staticmethod                           # сохранение изненений в базу админов (в файл) при выходе из админ панели
     def save_admins_changes():
         Admins_data.save_file()
         Admins_data.changes = 0
 
     @staticmethod
-    def undo_admins_changes():
+    def undo_admins_changes():              # не сохранение изменений при выходе из админ панели
         Admins_data.changes = 0
 
 
 # Класс управления квитанциями
 class Tickets_data:
-    filename = 'Data/tickets.csv'
-    data = []
-    nums = 0
-    found_tickets = []
-    found_index = 0
+    filename = 'Data/tickets.csv'       # имя файла с квитанциями
+    data = []                           # в атрибут загружается каитанции (список словарей)
+    nums = 0                            # количество загруженных квитанций (определяется при загрузке из файла)
+                                        # используется для присвоения следующего номера при регистрации нового ремонта
 
-    @staticmethod
+    found_tickets = []                  # сохраняется наеденные по запросу квитанции (список словарей сортированный)
+    found_index = 0                     # индекс найденной квитанции (исп-ся при дейстаиях с квитанциями в админ панели)
+
+    @staticmethod                           # поиск квитанции(ий) с заданными параметрами
     def search_ticket(param, flag):
         # функция поиска квитанций по параметру (номеру или фио - определяется автоматически)
         # если по номеру квитанция нашлась, то запоминается ФИО из этой квитанции,
-        # и происходит поиск по всей базе квитанций с этим ФИО (поиск по заданию)
-        # используется set() для исключения дублей при рекурсивном поиске по ФИО с квитанцией по номеру,
+        # и происходит поиск (рекурсия) по всей базе квитанций с этим ФИО (поиск по заданию)
+        # используется set() для исключения дублей при рекурсивном поиске по ФИО и квитанцией найденной по номеру,
         # с флагом 'one' - ищет только номер, 'all' - поиск и номера и всех квитанций с одним ФИО
         def search(k, f='one'):
             s = set()
@@ -118,8 +120,8 @@ class Tickets_data:
                 if i[key] == k:
                     s.add(tuple(i.items()))
                     if key == 'num':
-                        Tickets_data.found_index = index
-                        break
+                        Tickets_data.found_index = index    # запоминаем индекс найденной квитанции (используется
+                        break                               # при изменения статуса и даты в админ панели (действия)
                 index += 1
             if key == 'num' and s and f == 'all': s.update(search(i['fio']))
             return s  # возвращается сет с кортежами всех найденных квитанций (поиск по номеру и по фио) без повторов
@@ -136,18 +138,18 @@ class Tickets_data:
             return new_s_sorted         # Возвращается список словарей найденныйх квитанций (сортированный)
         return 0                        # Возвращается 0 если не найдено квитанций с заданным параметром
 
-    @staticmethod
+    @staticmethod                       # сохранение квитанции (используется в админ панели (действия)
     def save_ticket(list_of_ticket_to_save):
         Tickets_data.data[Tickets_data.found_index] = list_of_ticket_to_save
         Tickets_data.save_file()
 
-    @staticmethod
+    @staticmethod                       # добавление квитанции в data (при регистрации ремонта =Сдать в ремонт=)
     def add_ticket(ticket):
         Tickets_data.data.append(ticket)
         Tickets_data.nums += 1
         Tickets_data.save_file()
 
-    @staticmethod
+    @staticmethod                       # запись базы квитанций в файл
     def save_file():
         with open(Tickets_data.filename, 'w', encoding='utf-8') as f:
             writer = csv.DictWriter(f, fieldnames=list(Tickets_data.data[0].keys()), lineterminator='\r')
@@ -155,7 +157,7 @@ class Tickets_data:
             for d in Tickets_data.data:
                 writer.writerow(d)
 
-    @staticmethod
+    @staticmethod                       # загрузка данных квитанций из файла
     def load_file():
         try:
             with open(Tickets_data.filename, 'r', encoding='utf-8') as f:

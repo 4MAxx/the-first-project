@@ -1,13 +1,14 @@
 from user_n_output import Output, User
 from dataclasses import Admins_data, Tickets_data
 
-
+# Класс интерфейса и функционала Админ-панели
 class Adminka:
-    temp_login = ''
+    temp_login = ''     # при успешном входе сохраняется логин админа (используется при выводе заголовка меню)
+
                                                 # Ветка =АДМИН-ПАНЕЛЬ=
     @staticmethod
     def admin_panel():
-
+        # функция процедуры сохранения изменений списка админов, если список редактировали (удаляли, добавляли)
         def admin_save_changes():
             yes = {'y', 'Y', 'Н', 'н'}
             no = {'n', 'N', 'т', 'Т'}
@@ -45,7 +46,7 @@ class Adminka:
     def no_admins():
         print(Output.txt_war+'Не зарегистрировано ни одного администратора')
 
-    @staticmethod
+    @staticmethod                           # Вывод в консоль списка админов
     def admin_spisok():
         Output.clear()
         if Admins_data.amount == 0: Adminka.no_admins()
@@ -56,7 +57,7 @@ class Adminka:
                 n += 1
         Output.press_enter()
 
-    @staticmethod
+    @staticmethod                           # Метод удаления админа (запрет на удаление единственного админа)
     def admin_del():
         Output.clear()
         if Admins_data.amount == 0: Adminka.no_admins()
@@ -73,7 +74,7 @@ class Adminka:
                 print(Output.txt_war+'Удаление единственного админа невозможно')
         Output.press_enter()
 
-    @staticmethod
+    @staticmethod                           # Метод добавления админа (примет логин, если нету в базе)
     def admin_add():
         while True:
             Output.clear()
@@ -102,12 +103,12 @@ class Adminka:
             Output.menu(Menu_Trees.admin_actions_menu,
                         f'Квитанция # {k} - {Admins_data.found_ticket[0]["fio"]} '
                         f'(срок: {Admins_data.found_ticket[0]["date_out"]}) - {Admins_data.found_ticket[0]["status"]}')
-            Tickets_data.save_ticket(Admins_data.found_ticket[0])
+            Tickets_data.save_ticket(Admins_data.found_ticket[0])       # сохраняем квитанцию в базу в любом случае
         else:
             print(Output.txt_err + 'Квитанция не найдена')
             Output.press_enter()
 
-    @staticmethod
+    @staticmethod                           # Метод изменения статуса квитанции (дейстаия с квитанциями)
     def admin_change_status():
         Output.clear()
         statuses = {1: 'ремонтируется', 2: 'готово', 3: 'выдано клиенту'}
@@ -125,7 +126,7 @@ class Adminka:
             print(Output.txt_err+'Неверный выбор')
             Output.press_enter()
 
-    @staticmethod
+    @staticmethod                           # Метод изменения даты ремонта (дейстаия с квитанциями)
     def admin_change_date():
         Output.clear()
         print('Производится изменение даты выполнения ремонта:')
@@ -137,7 +138,7 @@ class Adminka:
         print(Output.txt_suc+'Квитанция после изменения:\n-----')
         Adminka.admin_get_info()
 
-    @staticmethod
+    @staticmethod                           # Вывод в консоль информации о квитанции
     def admin_get_info():
         Output.clear()
         Output.print_ticket(Admins_data.found_ticket[0])

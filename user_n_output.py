@@ -3,12 +3,12 @@ import keyboard
 from dataclasses import Tickets_data
 from pynput import keyboard as kb
 
-# Методы вывода на консоль квитанций (требуется и для класса админки и для пользовательского класса)
+# Класс вывода в консоль информации о квитанции(ях) (требуется и для класса админки и для пользовательского класса)
 class Print_ticket:
     @staticmethod
-    def print_ticket(ticket):
+    def print_ticket(ticket):                       # Вывод в консоль информации об 1 квитанции
 
-        def date_print(date):
+        def date_print(date):                       # Нормализация формата Даты к виду ЧЧ-ММ-ГГГГ (при выводе в консоль)
             str = date.split('-')
             return '-'.join(str[::-1])
 
@@ -20,25 +20,25 @@ class Print_ticket:
         print(f'Статус:       {ticket["status"]}')
 
     @staticmethod
-    def print_tickets(list_of_tickets):
+    def print_tickets(list_of_tickets):             # Вывод в консоль информации о квитанциях (много)
         for i in list_of_tickets:
             Print_ticket.print_ticket(i)
 
 
 # Класс вывода вывода на консоль общего пользования
 class Output(Print_ticket):
-    txt_err = '\n!!! ОШИБКА !!!\n'                # Наименование всплывающих предупреждений
+    txt_err = '\n!!! ОШИБКА !!!\n'                  # Наименование всплывающих предупреждений
     txt_war = 'ПРЕДУПРЕЖДЕНИЕ !!!\n'
     txt_suc = '\nУСПШНО !!!\n'
 
-    txt_line = '='*35
+    txt_line = '='*35                               # ===================================
 
 
-    @staticmethod
+    @staticmethod                                   # очистка экрана консоли (своеобразная)
     def clear():
         print("\n" * 50)
 
-    @staticmethod
+    @staticmethod                                   # ожидание ввода клавиши для продолжения работы
     def press_enter():
         print(input('Нажмите клавишу Enter для продолжения...'))
         # print('Нажмите клавишу Enter для продолжения...')
@@ -76,7 +76,7 @@ class Output(Print_ticket):
 
         return input_ver_1()    # input_ver_2()
 
-    @staticmethod
+    @staticmethod                                       # Основной цыкл вывода меню в консоль
     def menu(menu, title='Добро пожаловать в мастерскую !'):
         len_menu = len(menu)
         while True:
@@ -164,7 +164,7 @@ class TV(Tech):
 
 # Класс пользовательских задач
 class User:
-    @staticmethod
+    @staticmethod                                       # Функционал при выборе =Сдать технику в ремонт=
     def user_give():
         ticket = {'num': '', 'fio': '', 'type': '', 'date_in': str(datetime.date.today()),
                   'date_out': str(datetime.date.today() + datetime.timedelta(days=random.randint(1, 5))), 'status': ''}
@@ -195,7 +195,7 @@ class User:
             print(Output.txt_err + 'ФИО не должно быть пустым')
         Output.press_enter()
 
-    @staticmethod
+    @staticmethod                                       # Функционал при выборе =Просмотреть информацию=
     def user_get_info():
         Output.clear()
         k = input('Введите номер квитанции или ФИО:\n')
