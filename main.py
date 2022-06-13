@@ -1,5 +1,6 @@
 from user_n_output import Output, User, mystr
 from dataclasses import Admins_data, Tickets_data
+import getpass
 
 # Класс интерфейса и функционала Админ-панели
 class Adminka:
@@ -8,7 +9,7 @@ class Adminka:
                                                 # Ветка =АДМИН-ПАНЕЛЬ=
     @staticmethod
     def admin_panel():
-        # функция процедуры сохранения изменений списка админов, если список редактировали (удаляли, добавляли)
+        # функция сохранения изменений списка админов, если список редактировали (удаляли, добавляли)
         def admin_save_changes():
             yes = {'y', 'Y', 'Н', 'н'}
             no = {'n', 'N', 'т', 'Т'}
@@ -30,7 +31,8 @@ class Adminka:
         Admins_data.load_file()
         Output.clear()
         l = input('Введите логин: ')
-        p = input('Введите пароль: ')
+        # p = input('Введите пароль: ')
+        p = Output.input_psw('Введите пароль: ')
         if Admins_data.check_login(l, p):
             Adminka.temp_login = l
                                             # вход / выход  =АДМИН-ПАНЕЛЬ=
@@ -74,53 +76,50 @@ class Adminka:
                 print(Output.txt_war+'Удаление единственного админа невозможно')
         Output.press_enter()
 
+    @staticmethod                       # Функция проверки пароля на соответствие требованиям безопасности (add_admin)
+    def check_psw(psw, psw2):           # Возвращает либо True, либо текст ошибки
+        # Test 1
+        if '123' in psw or 'password' in psw:
+            return 'Пароль слишком простой!'
+        # Test 2
+        if psw != psw2:
+            return 'Введенные пароли различаются'
+        # Test 3
+        up = 0
+        low = 0
+        symb_str = '%@#$&*!~'
+        digit = 0
+        symb = 0
+        for i in psw:
+            if i.isupper(): up += 1
+            if i.islower(): low += 1
+            if i.isdigit(): digit += 1
+        for i in symb_str:
+            symb += psw.count(i)
+        # Main test
+        if up >= 1 and up + low >= 3 and digit >= 1 and symb >= 1 and 6 <= len(psw):
+            return True
+        else:
+            return 'Пароль не соответствует требованиям безопасности!'
+
     @staticmethod                           # Метод добавления админа
     def admin_add():
-
-        def check_psw(psw, psw2):           # Функция проверки пароля на соответствие требованиям безопасности
-            # Test 1                        # Возвращает либо True, либо текст ошибки
-            if '123' in psw or 'password' in psw:
-                return 'Пароль слишком простой!'
-            # Test 2
-            if psw != psw2:
-                return 'Введенные пароли различаются'
-            # Test 3
-            up = 0
-            low = 0
-            symb_str = '%@#$&*!~'
-            digit = 0
-            symb = 0
-            for i in psw:
-                if i.isupper(): up += 1
-                if i.islower(): low += 1
-                if i.isdigit(): digit += 1
-            for i in symb_str:
-                symb += psw.count(i)
-            # Main test
-            if up >= 1 and up + low >= 3 and digit >= 1 and symb >= 1 and 6 <= len(psw):
-                return True
-            else:
-                return 'Пароль не соответствует требованиям безопасности!'
-
-
-        while True:                         # Тело метода
+        while True:
             Output.clear()
             print('Регистрация нового администратора')
-            log = mystr('')                                 # оборачиваем новым классом mystr(), наследованный от str()
-                                                            # класс mystr() имеет адаптированные методы проверки
             # Препятствуем вводу пустого логина (должны быть данные)
-            log = mystr(input('Введите логин: '))
-            if log.is_empty():
+            log = mystr(input('Введите логин: '))           # оборачиваем новым классом mystr(), наследованный от str()
+            if log.is_empty():                              # класс mystr() имеет адаптированные методы проверки
                 continue
             # Проверка логина на наличие в базе админов
             if Admins_data.login_search(log) == -1:         # продолжаем регистрацию, если такого логина нету в базе
-                # Проверяем пароль на соответствие безопасности
                 while True:
                     print('\nТребования к паролю, минимум: 1 цифра, 1 заглавная, 1 спец-символ (%@#$&*!~), 6 разрядов')
                     psw = input('Введите пароль: ')
                     psw2 = input('Подтвердите пароль: ')
-                    check = check_psw(psw, psw2)
-                    if check_psw(psw, psw2) == True:        # Если пароль соответствует требованиям, проходим дальше
+                    # Проверяем пароль на соответствие безопасности
+                    check = Adminka.check_psw(psw, psw2)
+                    if check == True:        # Если пароль соответствует требованиям, проходим дальше
                         flag_pass = True
                         break
                     else:
@@ -129,7 +128,6 @@ class Adminka:
                         Output.clear()
                         flag_pass = False               # Если пароль не соответствует, начинаем регистрацию сначала
                         break
-
                 if flag_pass:
                     fio = mystr('')
                     # Препятствуем вводу пустого ФИО (должны быть не пустые данные, в которых не должно быть цифр)
@@ -138,14 +136,16 @@ class Adminka:
 
                     # После всех проверок записываем данные нового админа в базу
                     Admins_data.add_admin(log, psw, fio)
-                    print(Output.txt_suc+'Регистрация администратора произошла успешно')
-                    print(f'Логин:{log}, ФИО: {fio}')
+                    Output.clear()
+                    print(Output.txt_suc+'Регистрация администратора произошла успешно\n'+Output.txt_line)
+                    print(f'Новый администратор - Логин:{log}, ФИО: {fio}\n'+Output.txt_line)
                     Output.press_enter()
                     break
             else:
                 print(Output.txt_err+'Введенный логин уже существует')
                 Output.press_enter()
                 continue
+
 
                                         # Ветка =админ-панели= \ =ДЕЙСТВИЯ С КВИТАНЦИЯМИ=
     @staticmethod

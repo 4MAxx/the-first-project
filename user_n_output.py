@@ -1,4 +1,4 @@
-import datetime, random
+import datetime, random, sys
 import keyboard
 from dataclasses import Tickets_data
 from pynput import keyboard as kb
@@ -25,7 +25,7 @@ class Print_ticket:
             Print_ticket.print_ticket(i)
 
 
-# Класс вывода вывода на консоль общего пользования
+# Класс ввода вывода на консоль общего пользования
 class Output(Print_ticket):
     txt_err = '\n!!! ОШИБКА !!!\n'                  # Наименование всплывающих предупреждений
     txt_war = 'ПРЕДУПРЕЖДЕНИЕ !!!\n'
@@ -75,6 +75,31 @@ class Output(Print_ticket):
             return k
 
         return input_ver_1()    # input_ver_2()
+
+    @staticmethod
+    def input_psw(prompt):
+        pwd = ""
+        sys.stdout.write(prompt)
+        sys.stdout.flush()
+        while True:
+            key = keyboard.read_key(True)
+            if key == 'enter':                  # При вводе Enter
+                if pwd != '':
+                    sys.stdout.write('\n')
+                    return pwd
+            if key == 'backspace':              # При вводе Backspace
+                if len(pwd) > 0:
+                    # Стираем предыдущий символ
+                    sys.stdout.write('\b' + ' ' + '\b')
+                    sys.stdout.flush()
+                    pwd = pwd[:-1]
+            else:
+                # Маскируем введенные символы
+                char = keyboard.read_key(True)
+                if len(char) == 1:
+                    sys.stdout.write('*')
+                    sys.stdout.flush()
+                    pwd = pwd + char
 
     @staticmethod                                       # Основной цыкл вывода меню в консоль
     def menu(menu, title='Добро пожаловать в мастерскую !'):
