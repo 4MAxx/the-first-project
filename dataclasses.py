@@ -1,9 +1,10 @@
 import csv, bcrypt
 from datetime import date
+import configparser
 
 # Класс управления данными админов
 class Admins_data:
-    filename = 'Data/admins.csv'        # имя файла с админами
+    filename = 'Data/admins.csv'        # имя файла с админами  (по дефолту)
     info = []                           # в атрибут загружается список админов (список списков)
     amount = 0                          # количество админов в списке (определяется при загрузке из файла)
     changes = 0                         # маркер изменения списка админов (меняется при редактировании)
@@ -12,11 +13,18 @@ class Admins_data:
 
     # мастер логин, дает возможность входа в админ-панель, при отсутствии файла с администраторами,
     # нельзя проверять наличие файла, и при отсутствии давать доступ по первому входу любого логина-пароля
-    # иначе можно получить доступ к админ-панели, удалив файл с логинами он ту сри
-    __master_login = ['master', '$2b$12$piSxjbAfRwdCcHn1a421wOtdBUKav1CiH3BgVMZugnnB3ekJScsE6', 'master login']
+    # иначе можно получить доступ к админ-панели, удалив файл с логинами
+    __master_login = []
 
     @staticmethod                           # загрузка данных админов из файла (список списков)
-    def load_file():
+    def load_file(admins_filename=filename):
+        Admins_data.filename = admins_filename
+                                            # Загрузка мастер-логина из файла конфигурации
+        config = configparser.ConfigParser()
+        config.read('config.ini', encoding='utf-8-sig')
+        Admins_data.__master_login = [config['master_login']['login'],
+                                      config['master_login']['psw'],
+                                      config['master_login']['fio']]
         try:
             with open(Admins_data.filename, 'r', encoding='utf-8') as f_read:
                 fr = csv.reader(f_read, delimiter=",")
@@ -94,7 +102,7 @@ class Admins_data:
 
 # Класс управления квитанциями
 class Tickets_data:
-    filename = 'Data/tickets.csv'       # имя файла с квитанциями
+    filename = 'Data/tickets.csv'       # имя файла с квитанциями (по дефолту)
     data = []                           # в атрибут загружается каитанции (список словарей)
     nums = 0                            # количество загруженных квитанций (определяется при загрузке из файла)
                                         # используется для присвоения следующего номера при регистрации нового ремонта
@@ -158,7 +166,8 @@ class Tickets_data:
                 writer.writerow(d)
 
     @staticmethod                       # загрузка данных квитанций из файла
-    def load_file():
+    def load_file(tickets_filename=filename):
+        Tickets_data.filename = tickets_filename
         try:
             with open(Tickets_data.filename, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)

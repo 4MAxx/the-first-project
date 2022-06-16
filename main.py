@@ -1,6 +1,7 @@
 from user_n_output import Output, User, mystr
 from dataclasses import Admins_data, Tickets_data
-import getpass
+import configparser
+import sys
 
 # Класс интерфейса и функционала Админ-панели
 class Adminka:
@@ -28,7 +29,7 @@ class Adminka:
                     Admins_data.undo_admins_changes()
                     break
 
-        Admins_data.load_file()
+        Admins_data.load_file(admins_filename)
         Output.clear()
         l = input('Введите логин: ')
         # p = input('Введите пароль: ')
@@ -229,5 +230,12 @@ class Menu_Trees():
 
 
 # Тело программы
-Tickets_data.load_file()
-Output.menu(Menu_Trees.main_menu)
+if __name__ == '__main__':
+    # загрузка конфигурации (имен файлов к данным админов и квитанций)
+    config = configparser.ConfigParser()
+    config.read('config.ini', encoding='utf-8-sig')
+    admins_filename = config['data']['admin_file']
+    tickets_filename = config['data']['tickets_file']
+
+    Tickets_data.load_file(tickets_filename)
+    Output.menu(Menu_Trees.main_menu)

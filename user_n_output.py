@@ -67,7 +67,7 @@ class Output(Print_ticket):
 
             # def on_release(key):
             #     print(f'Key released: {key}')
-            #     if key == keyboard.Key.esc:
+            #     if key == kb.Key.esc:
             #         return False
 
             with kb.Listener(on_release=on_release) as listener:
@@ -76,16 +76,18 @@ class Output(Print_ticket):
 
         return input_ver_1()    # input_ver_2()
 
-    @staticmethod
+    @staticmethod                   # Метод маскировки звездочками *** при вводе пароля
     def input_psw(prompt):
         pwd = ""
         sys.stdout.write(prompt)
         sys.stdout.flush()
         while True:
             key = keyboard.read_key(True)
+            keyboard.unhook_all()
             if key == 'enter':                  # При вводе Enter
                 if pwd != '':
                     sys.stdout.write('\n')
+                    # print(pwd)
                     return pwd
             if key == 'backspace':              # При вводе Backspace
                 if len(pwd) > 0:
@@ -93,13 +95,63 @@ class Output(Print_ticket):
                     sys.stdout.write('\b' + ' ' + '\b')
                     sys.stdout.flush()
                     pwd = pwd[:-1]
+            if key == 'alt':                    # Имитация смены раскладки (пока не пригодилось)
+                keyboard.send('alt+shift')
             else:
                 # Маскируем введенные символы
                 char = keyboard.read_key(True)
+                sys.stdout.flush()
                 if len(char) == 1:
                     sys.stdout.write('*')
                     sys.stdout.flush()
                     pwd = pwd + char
+
+    # Альтернативный метод маскировки ввода пароля (есть проблемки)
+    # @staticmethod
+    # def read_char():
+    #     class Pwd:
+    #         pwd = ''
+    #     def on_press(key):
+    #         transit_table = {'<96>': '0', '<97>': '1', '<98>': '2', '<99>': '3', '<100>': '4', '<101>': '5',
+    #                          '<102>': '6', '<103>': '7', '<104>': '8', '<105>': '9'}
+    #
+    #         try:
+    #             # Маскируем введенные символы
+    #             char = key.char.replace("'", "")
+    #             sys.stdout.write('\b' + '*')
+    #             sys.stdout.flush()
+    #             Pwd.pwd = Pwd.pwd + char
+    #         except AttributeError:
+    #             if str(key) in transit_table.keys():
+    #                 char = transit_table[str(key)]
+    #                 sys.stdout.write('\b' + '*')
+    #                 sys.stdout.flush()
+    #                 Pwd.pwd = Pwd.pwd + char
+    #             elif key == kb.Key.enter:
+    #                 if Pwd.pwd != '':
+    #                     sys.stdout.write('\n')
+    #                     sys.stdout.flush()
+    #                 return False
+    #             elif key == kb.Key.backspace:
+    #                 if len(Pwd.pwd) > 0:
+    #                     # Стираем предыдущий символ
+    #                     sys.stdout.write('\b' + ' ' + '\b')
+    #                     sys.stdout.flush()
+    #                     Pwd.pwd = Pwd.pwd[:-1]
+    #         return True
+    #
+    #     with kb.Listener(on_press=on_press) as listener:
+    #         listener.join()
+    #
+    #     return Pwd.pwd
+
+    # @staticmethod
+    # def input_psw(prompt):
+    #     sys.stdout.write(prompt)
+    #     sys.stdout.flush()
+    #     pwd = Output.read_char()
+    #     return pwd
+
 
     @staticmethod                                       # Основной цыкл вывода меню в консоль
     def menu(menu, title='Добро пожаловать в мастерскую !'):
