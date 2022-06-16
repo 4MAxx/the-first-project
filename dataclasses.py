@@ -41,6 +41,13 @@ class Admins_data:
             for i in Admins_data.info:
                 wr.writerow(i)
 
+    @staticmethod
+    def print_spisok():
+        n = 1
+        for i in Admins_data.info:
+            print(n, ' |', ', '.join([i[0], i[2]]))
+            n += 1
+
     @staticmethod                           # Сравниваем введенный пароль с хэшем из базы админов
     def compare(psw, hashed):
         try:

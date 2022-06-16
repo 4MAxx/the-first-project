@@ -52,18 +52,17 @@ class Adminka:
     @staticmethod                           # Вывод в консоль списка админов
     def admin_spisok():
         Output.clear()
-        if Admins_data.amount == 0: Adminka.no_admins()
+        if Admins_data.amount == 0:
+            Adminka.no_admins()
         else:
-            n = 1
-            for i in Admins_data.info:
-                print(n,' |', ', '.join([i[0], i[2]]))
-                n += 1
+            Admins_data.print_spisok()
         Output.press_enter()
 
     @staticmethod                           # Метод удаления админа (запрет на удаление единственного админа)
     def admin_del():
         Output.clear()
-        if Admins_data.amount == 0: Adminka.no_admins()
+        if Admins_data.amount == 0:
+            Adminka.no_admins()
         else:
             n = input('Введите логин админа для его удаления: ')
             if Admins_data.amount > 1:
