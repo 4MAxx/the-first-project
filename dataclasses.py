@@ -42,11 +42,9 @@ class Admins_data:
                 wr.writerow(i)
 
     @staticmethod
-    def print_spisok():
-        n = 1
-        for i in Admins_data.info:
-            print(n, ' |', ', '.join([i[0], i[2]]))
-            n += 1
+    def getinfo():
+        return Admins_data.info
+
 
     @staticmethod                           # Сравниваем введенный пароль с хэшем из базы админов
     def compare(psw, hashed):
@@ -88,6 +86,14 @@ class Admins_data:
         Admins_data.info.append([log, Admins_data.hashed(psw), fio])
         Admins_data.changes += 1
         Admins_data.amount += 1
+
+    @staticmethod
+    def set_found_ticket(fTicket):
+        Admins_data.found_ticket = fTicket
+
+    @staticmethod
+    def get_found_ticket():
+        return Admins_data.found_ticket
 
     @staticmethod                           # изменение даты выдачи квитанции
     def change_date(y, m, d):
@@ -187,3 +193,7 @@ class Tickets_data:
             # сдавать в ремонт, админ панель доступна. При попытках поиска информации выводится ошибка, что квитанции нету
             # оно логично - т.к. списки будут пусты
             pass
+
+    @staticmethod
+    def getNums():
+        return Tickets_data.nums

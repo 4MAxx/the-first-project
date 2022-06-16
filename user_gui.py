@@ -71,13 +71,13 @@ class TV(Tech):
 
 # Класс пользовательских задач
 class User:
-    @staticmethod                                       # Функционал при выборе =Сдать технику в ремонт=
+    @staticmethod                                       # Функционал при выборе =СДАТЬ ТЕХНИКУ В РЕМОНТ=
     def user_give():
         ticket = {'num': '', 'fio': '', 'type': '', 'date_in': str(datetime.date.today()),
                   'date_out': str(datetime.date.today() + datetime.timedelta(days=random.randint(1, 5))), 'status': ''}
         Output.clear()
         print('Регистрация ремонта\n'+Output.txt_line)
-        ticket['num'] = str(Tickets_data.nums + 1)
+        ticket['num'] = str(Tickets_data.getNums() + 1)
         ticket['fio'] = mystr(input('Введите ФИО: '))   # оборачиваем новым классом mystr(), наследованный от str()
                                                         # класс mystr() имеет адаптированные методы проверки
         # При условии что ФИО не пустое и не содержит цифры - продолжаем регистрацию
@@ -103,7 +103,7 @@ class User:
             print(Output.txt_err + 'ФИО не должно быть пустым или содержать цифры')
         Output.press_enter()
 
-    @staticmethod                                       # Функционал при выборе =Просмотреть информацию=
+    @staticmethod                                       # Функционал при выборе =ПРОСМОТРЕТЬ ИНФОРМАЦИЮ=
     def user_get_info():
         Output.clear()
         k = input('Введите номер квитанции или ФИО:\n')

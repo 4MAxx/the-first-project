@@ -47,28 +47,34 @@ class Adminka:
         if Admins_data.changes >= 1:
             admin_save_changes()            # Если менялся список админов, то проводим процедуру сохранения изменений
 
+
     @staticmethod
     def no_admins():
         print(Output.txt_war+'Не зарегистрировано ни одного администратора')
 
-    @staticmethod                           # Вывод в консоль списка админов
+
+    @staticmethod                           # =админ-панель= \ =ОТОБРАЗИТЬ СПИСОК ВСЕХ АДМИНОВ=
     def admin_spisok():
         Output.clear()
         if Admins_data.amount == 0:
             Adminka.no_admins()
         else:
-            Admins_data.print_spisok()
+            n = 1
+            for i in Admins_data.getinfo():
+                print(n, ' |', ', '.join([i[0], i[2]]))     # на консоль выводим только =логин=[0] и =фио=[2] админа
+                n += 1
         Output.press_enter()
 
-    @staticmethod                           # Метод удаления админа (запрет на удаление единственного админа)
+                                            # =админ-панель= \ =УДАЛИТЬ АДМИНА ИЗ СПИСКА=
+    @staticmethod
     def admin_del():
         Output.clear()
         if Admins_data.amount == 0:
             Adminka.no_admins()
         else:
             n = input('Введите логин админа для его удаления: ')
-            if Admins_data.amount > 1:
-                ad_log = Admins_data.login_search(n)  # поиск логина в списке, возвращается индекс, если нету -1
+            if Admins_data.amount > 1:                  # (запрет на удаление единственного админа)
+                ad_log = Admins_data.login_search(n)    # поиск логина в списке, возвращается индекс, если нету -1
                 if ad_log != -1:
                     Admins_data.delete_admin(ad_log)
                     print(Output.txt_suc+'Удаление произошло успешно!')
@@ -77,6 +83,7 @@ class Adminka:
             else:
                 print(Output.txt_war+'Удаление единственного админа невозможно')
         Output.press_enter()
+
 
     @staticmethod                       # Функция проверки пароля на соответствие требованиям безопасности (add_admin)
     def check_psw(psw, psw2):           # Возвращает либо True, либо текст ошибки
@@ -104,7 +111,8 @@ class Adminka:
         else:
             return 'Пароль не соответствует требованиям безопасности!'
 
-    @staticmethod                           # Метод добавления админа
+
+    @staticmethod                           # =админ-панель= \ =ДОБАВИТЬ НОВОГО АДМИНА=
     def admin_add():
         while True:
             Output.clear()
@@ -154,20 +162,20 @@ class Adminka:
     def admin_actions():
         Output.clear()
         k = input('Введите номер квитанции:\n')
-        list_of_found_tickets = Tickets_data.search_ticket(k, 'one')
+        list_of_found_tickets = Tickets_data.search_ticket(k, 'one')    # поиск квитанций (возвр. список словарей)
         if list_of_found_tickets:
-            Admins_data.found_ticket = list_of_found_tickets
+            Admins_data.set_found_ticket(list_of_found_tickets)
                                                                         # вход/выход =ДЕЙСТВИЯ С КВИТАНЦИЯМИ=
             Output.menu(Menu_Trees.admin_actions_menu,
-                        f'Квитанция # {k} - {Admins_data.found_ticket[0]["fio"]} '
-                        f'(срок: {normdate(Admins_data.found_ticket[0]["date_out"])})'
-                        f' - {Admins_data.found_ticket[0]["status"]}')
-            Tickets_data.save_ticket(Admins_data.found_ticket[0])       # сохраняем квитанцию в базу в любом случае
+                        f'Квитанция # {k} - {Admins_data.get_found_ticket()[0]["fio"]} '
+                        f'(срок: {normdate(Admins_data.get_found_ticket()[0]["date_out"])})'
+                        f' - {Admins_data.get_found_ticket()[0]["status"]}')  # в меню отпрааляется заголовок с инфой о квит.
+            Tickets_data.save_ticket(Admins_data.get_found_ticket()[0])       # сохраняем квитанцию в базу в любом случае
         else:
             print(Output.txt_err + 'Квитанция не найдена')
             Output.press_enter()
 
-    @staticmethod                           # Метод изменения статуса квитанции (дейстаия с квитанциями)
+    @staticmethod                           # =дейстаия с квитанциями= \ =ИЗМЕНИТЬ СТАТУС РЕМОНТА=
     def admin_change_status():
         Output.clear()
         statuses = {1: 'ремонтируется', 2: 'готово', 3: 'выдано клиенту'}
@@ -185,7 +193,7 @@ class Adminka:
             print(Output.txt_err+'Неверный выбор')
             Output.press_enter()
 
-    @staticmethod                           # Метод изменения даты ремонта (дейстаия с квитанциями)
+    @staticmethod                           # =дейстаия с квитанциями= \ =ИЗМЕНИТЬ ДАТУ РЕМОНТА=
     def admin_change_date():
         Output.clear()
         print('Производится изменение даты выполнения ремонта:')
@@ -206,7 +214,7 @@ class Adminka:
             Output.press_enter()
 
 
-    @staticmethod                           # Вывод в консоль информации о квитанции
+    @staticmethod                           # =дейстаия с квитанциями= \ =ПРОСМОТРЕТЬ ИНФОРМАЦИО О КВИТАНЦИИ=
     def admin_get_info(cl='clear'):
         if cl == 'clear':
             Output.clear()
