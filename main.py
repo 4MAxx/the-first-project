@@ -1,11 +1,13 @@
-from user_n_output import Output, User, mystr
+from in_n_output import Output
+from user_gui import User
 from dataclasses import Admins_data, Tickets_data
 import configparser
-import sys
+from stuff import mystr, normdate
 
 # Класс интерфейса и функционала Админ-панели
 class Adminka:
     temp_login = ''     # при успешном входе сохраняется логин админа (используется при выводе заголовка меню)
+
 
                                                 # Ветка =АДМИН-ПАНЕЛЬ=
     @staticmethod
@@ -155,10 +157,11 @@ class Adminka:
         list_of_found_tickets = Tickets_data.search_ticket(k, 'one')
         if list_of_found_tickets:
             Admins_data.found_ticket = list_of_found_tickets
-                                                                            # вход/выход =ДЕЙСТВИЯ С КВИТАНЦИЯМИ=
+                                                                        # вход/выход =ДЕЙСТВИЯ С КВИТАНЦИЯМИ=
             Output.menu(Menu_Trees.admin_actions_menu,
                         f'Квитанция # {k} - {Admins_data.found_ticket[0]["fio"]} '
-                        f'(срок: {Admins_data.found_ticket[0]["date_out"]}) - {Admins_data.found_ticket[0]["status"]}')
+                        f'(срок: {normdate(Admins_data.found_ticket[0]["date_out"])})'
+                        f' - {Admins_data.found_ticket[0]["status"]}')
             Tickets_data.save_ticket(Admins_data.found_ticket[0])       # сохраняем квитанцию в базу в любом случае
         else:
             print(Output.txt_err + 'Квитанция не найдена')
@@ -197,14 +200,16 @@ class Adminka:
             Admins_data.change_date(y, m, d)
             Output.clear()
             print(Output.txt_suc + 'Квитанция после изменения:\n' + Output.txt_line)
-            Adminka.admin_get_info()
+            Adminka.admin_get_info('no clear')
         except:
             print(Output.txt_err + 'Ошибка ввода даты')
             Output.press_enter()
 
 
     @staticmethod                           # Вывод в консоль информации о квитанции
-    def admin_get_info():
+    def admin_get_info(cl='clear'):
+        if cl == 'clear':
+            Output.clear()
         Output.print_ticket(Admins_data.found_ticket[0])
         Output.press_enter()
 
