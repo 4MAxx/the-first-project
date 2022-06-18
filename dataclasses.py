@@ -17,14 +17,15 @@ class Admins_data:
     __master_login = []
 
     @staticmethod                           # загрузка данных админов из файла (список списков)
-    def load_file(admins_filename=filename):
-        Admins_data.filename = admins_filename
-                                            # Загрузка мастер-логина из файла конфигурации
+    def load_file():
+                                            # Загрузка мастер-логина, путь к файлу из файла конфигурации
         config = configparser.ConfigParser()
         config.read('config.ini', encoding='utf-8-sig')
         Admins_data.__master_login = [config['master_login']['login'],
                                       config['master_login']['psw'],
                                       config['master_login']['fio']]
+        Admins_data.filename = config['data']['admin_file']
+        filename = config['data']['tickets_file']
         try:
             with open(Admins_data.filename, 'r', encoding='utf-8') as f_read:
                 fr = csv.reader(f_read, delimiter=",")
@@ -179,8 +180,11 @@ class Tickets_data:
                 writer.writerow(d)
 
     @staticmethod                       # загрузка данных квитанций из файла
-    def load_file(tickets_filename=filename):
-        Tickets_data.filename = tickets_filename
+    def load_file():
+                                        # Загрузка путь к файлу из файла конфигурации
+        config = configparser.ConfigParser()
+        config.read('config.ini', encoding='utf-8-sig')
+        Tickets_data.filename = config['data']['tickets_file']
         try:
             with open(Tickets_data.filename, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
