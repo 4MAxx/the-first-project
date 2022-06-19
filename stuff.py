@@ -7,11 +7,13 @@ class mystr(str):
                 return True
         return False
 
+
     # Функция проверки на пустотю строку или строку с одними пробелами
     def is_empty(self):
         if not self or self.isspace():
             return True
         return False
+
 
     # Функция совмещающая в себя 2 проверки (на пустоту и цифры) - если хоть одна проверка True, то строка не валидна
     def is_valid(self):

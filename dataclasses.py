@@ -1,14 +1,16 @@
 import csv, bcrypt
 from datetime import date
 import configparser
+# from dataclasses_viaBD import Tickets_db, Admins_db
+
 
 # Класс управления данными админов
 class Admins_data:
-    filename = 'Data/admins.csv'        # имя файла с админами  (по дефолту)
-    info = []                           # в атрибут загружается список админов (список списков)
-    amount = 0                          # количество админов в списке (определяется при загрузке из файла)
-    changes = 0                         # маркер изменения списка админов (меняется при редактировании)
-    found_ticket = []                   # фиксируется найденная квитанция при действиях с квитанциями (список словарей)
+    filename = 'Data/admins.csv'    # имя файла с админами  (по дефолту)
+    info = []                       # в атрибут загружается список админов (список списков)
+    amount = 0                      # количество админов в списке (определяется при загрузке из файла)
+    changes = 0                     # маркер изменения списка админов (меняется при редактировании)
+    found_ticket = []               # фиксируется найденная квитанция при действиях с квитанциями (список словарей)
     # found_index = 0
 
     # мастер логин, дает возможность входа в админ-панель, при отсутствии файла с администраторами,
@@ -16,16 +18,15 @@ class Admins_data:
     # иначе можно получить доступ к админ-панели, удалив файл с логинами
     __master_login = []
 
-    @staticmethod                           # загрузка данных админов из файла (список списков)
+    @staticmethod                       # загрузка данных админов из файла (список списков)
     def load_file():
-                                            # Загрузка мастер-логина, путь к файлу из файла конфигурации
+        # Загрузка мастер-логина, путь к файлу из файла конфигурации
         config = configparser.ConfigParser()
         config.read('config.ini', encoding='utf-8-sig')
         Admins_data.__master_login = [config['master_login']['login'],
                                       config['master_login']['psw'],
                                       config['master_login']['fio']]
         Admins_data.filename = config['data']['admin_file']
-        filename = config['data']['tickets_file']
         try:
             with open(Admins_data.filename, 'r', encoding='utf-8') as f_read:
                 fr = csv.reader(f_read, delimiter=",")
@@ -35,19 +36,18 @@ class Admins_data:
             Admins_data.info = []
             Admins_data.amount = 0
 
-    @staticmethod                           # запись данных админов в файл
+    @staticmethod                       # запись данных админов в файл
     def save_file():
         with open(Admins_data.filename, 'w', encoding='utf-8') as f_write:
             wr = csv.writer(f_write, lineterminator='\r')
             for i in Admins_data.info:
                 wr.writerow(i)
 
-    @staticmethod
+    @staticmethod                       # возвращаем данные админов в виде [[список списков]]
     def getinfo():
         return Admins_data.info
 
-
-    @staticmethod                           # Сравниваем введенный пароль с хэшем из базы админов
+    @staticmethod                       # Сравниваем введенный пароль с хэшем из базы админов
     def compare(psw, hashed):
         try:
             result = bcrypt.checkpw(psw.encode(), hashed.encode())
@@ -55,7 +55,7 @@ class Admins_data:
             return False
         return result
 
-    @staticmethod                           # Проверяем правильность введенных данных (логин,пароль) при логине админа
+    @staticmethod                       # Проверяем правильность введенных данных (логин,пароль) при логине админа
     def check_login(l, p):
         if l == Admins_data.__master_login[0] and Admins_data.compare(p, Admins_data.__master_login[1]):
             return True
@@ -72,59 +72,65 @@ class Admins_data:
             index += 1
         return -1  # если возвращается -1, значит логина нету, иначе возвращается индекс логина в списке
 
-    @staticmethod
-    def delete_admin(index):                # удаление админа из базы
+    @staticmethod                       # удаление админа из базы
+    def delete_admin(index):
         Admins_data.info.pop(index)
-        Admins_data.amount -= 1             # исправлено в версии 2.3
+        Admins_data.amount -= 1  # исправлено в версии 2.3
         Admins_data.changes += 1
 
-    @staticmethod                           # хэширование пароля админа
+    @staticmethod                       # хэширование пароля админа
     def hashed(p):
         return bcrypt.hashpw(p.encode(), bcrypt.gensalt()).decode()
 
-    @staticmethod                           # добавление админа в базу
+    @staticmethod                       # добавление админа в базу
     def add_admin(log, psw, fio):
         Admins_data.info.append([log, Admins_data.hashed(psw), fio])
         Admins_data.changes += 1
         Admins_data.amount += 1
 
-    @staticmethod
+    @staticmethod                       # фиксируем для работы найденную квитанцию [{список словарей}]
     def set_found_ticket(fTicket):
         Admins_data.found_ticket = fTicket
 
-    @staticmethod
+    @staticmethod                       # возвращаем найденную квитанцию [{список словарей}]
     def get_found_ticket():
         return Admins_data.found_ticket
 
-    @staticmethod                           # изменение даты выдачи квитанции
+    @staticmethod                       # изменение даты выдачи квитанции
     def change_date(y, m, d):
         Admins_data.found_ticket[0]['date_out'] = str(date(y, m, d))
 
-    @staticmethod                           # изменение статуса квитанции
+    @staticmethod                       # изменение статуса квитанции
     def change_status(st):
         Admins_data.found_ticket[0]['status'] = st
 
-    @staticmethod                           # сохранение изненений в базу админов (в файл) при выходе из админ панели
+    @staticmethod                       # сохранение изненений в базу админов (в файл) при выходе из админ панели
     def save_admins_changes():
         Admins_data.save_file()
         Admins_data.changes = 0
 
-    @staticmethod
-    def undo_admins_changes():              # не сохранение изменений при выходе из админ панели
+    @staticmethod                       # не сохранение изменений при выходе из админ панели
+    def undo_admins_changes():
         Admins_data.changes = 0
+
+    # @staticmethod                     # сохранения базы данных в файл (перезапись) служебный
+    # def save_db_to_file():
+    #     db = Admins_db()
+    #     Admins_data.info = db.getinfo()
+    #     Admins_data.save_file()
 
 
 # Класс управления квитанциями
 class Tickets_data:
-    filename = 'Data/tickets.csv'       # имя файла с квитанциями (по дефолту)
-    data = []                           # в атрибут загружается каитанции (список словарей)
-    nums = 0                            # количество загруженных квитанций (определяется при загрузке из файла)
-                                        # используется для присвоения следующего номера при регистрации нового ремонта
+    filename = 'Data/tickets.csv'   # имя файла с квитанциями (по дефолту)
+    data = []                       # в атрибут загружается каитанции (список словарей)
+    nums = 0                        # количество загруженных квитанций (определяется при загрузке из файла)
+                                    # используется для присвоения следующего номера при регистрации нового ремонта
 
-    found_tickets = []                  # сохраняется наеденные по запросу квитанции (список словарей сортированный)
-    found_index = 0                     # индекс найденной квитанции (исп-ся при дейстаиях с квитанциями в админ панели)
+    found_tickets = []  # сохраняется наеденные по запросу квитанции (список словарей сортированный)
+    found_index = 0  # индекс найденной квитанции (исп-ся при дейстаиях с квитанциями в админ панели)
 
-    @staticmethod                           # поиск квитанции(ий) с заданными параметрами
+    @staticmethod                       # поиск квитанции(ий) с заданными параметрами
     def search_ticket(param, flag):
         # функция поиска квитанций по параметру (номеру или фио - определяется автоматически)
         # если по номеру квитанция нашлась, то запоминается ФИО из этой квитанции,
@@ -142,8 +148,8 @@ class Tickets_data:
                 if i[key] == k:
                     s.add(tuple(i.items()))
                     if key == 'num':
-                        Tickets_data.found_index = index    # запоминаем индекс найденной квитанции (используется
-                        break                               # при изменения статуса и даты в админ панели (действия)
+                        Tickets_data.found_index = index  # запоминаем индекс найденной квитанции (используется
+                        break  # при изменения статуса и даты в админ панели (действия)
                 index += 1
             if key == 'num' and s and f == 'all': s.update(search(i['fio']))
             return s  # возвращается сет с кортежами всех найденных квитанций (поиск по номеру и по фио) без повторов
@@ -157,11 +163,11 @@ class Tickets_data:
             # Сортировка списка словарей по номеру квитанции (если нужно, то меняем по другому признаку)
             new_s_sorted = sorted(new_set, key=lambda x: x['num'])
             Tickets_data.found_tickets = new_s_sorted
-            return new_s_sorted         # Возвращается список словарей найденныйх квитанций (сортированный)
-        return 0                        # Возвращается 0 если не найдено квитанций с заданным параметром
+            return new_s_sorted  # Возвращается список словарей найденныйх квитанций (сортированный)
+        return 0  # Возвращается 0 если не найдено квитанций с заданным параметром
 
-    @staticmethod                       # сохранение квитанции (используется в админ панели (действия)
-    def save_ticket(list_of_ticket_to_save):
+    @staticmethod                       # обновление квитанции (используется в админ панели (действия)
+    def update_ticket(list_of_ticket_to_save):
         Tickets_data.data[Tickets_data.found_index] = list_of_ticket_to_save
         Tickets_data.save_file()
 
@@ -181,7 +187,7 @@ class Tickets_data:
 
     @staticmethod                       # загрузка данных квитанций из файла
     def load_file():
-                                        # Загрузка путь к файлу из файла конфигурации
+        # Загрузка путь к файлу из файла конфигурации
         config = configparser.ConfigParser()
         config.read('config.ini', encoding='utf-8-sig')
         Tickets_data.filename = config['data']['tickets_file']
@@ -198,6 +204,16 @@ class Tickets_data:
             # оно логично - т.к. списки будут пусты
             pass
 
-    @staticmethod
+    @staticmethod                       # возвращаем количество квитанций
     def getNums():
         return Tickets_data.nums
+
+    @staticmethod                       # возвращаем данные админов в виде [{список словарей}]
+    def getdata():
+        return Tickets_data.data
+
+
+# Блок кода для тестирования работы библиотеки
+if __name__ == '__main__':
+    # Admins_data.save_db_to_file()
+    pass

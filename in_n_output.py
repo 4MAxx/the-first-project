@@ -2,19 +2,20 @@ import sys, keyboard
 from stuff import normdate
 from pynput import keyboard as kb
 
+
 # Класс вывода в консоль информации о квитанции(ях) (требуется и для класса админки и для пользовательского класса)
 class Print_ticket:
-    @staticmethod
-    def print_ticket(ticket):                       # Вывод в консоль информации об 1 квитанции
+    @staticmethod                                   # Вывод в консоль информации об 1 квитанции
+    def print_ticket(ticket):
         print(f'Квитанция # {ticket["num"]}:')
         print(f'ФИО:          {ticket["fio"]}')
         print(f'Техника:      {ticket["type"]}')
-        print(f'Дата приемки: {normdate(ticket["date_in"])}')
-        print(f'Дата выдачи:  {normdate(ticket["date_out"])}')
+        print(f'Дата приемки: {normdate(str(ticket["date_in"]))}')
+        print(f'Дата выдачи:  {normdate(str(ticket["date_out"]))}')
         print(f'Статус:       {ticket["status"]}')
 
-    @staticmethod
-    def print_tickets(list_of_tickets):             # Вывод в консоль информации о квитанциях (много)
+    @staticmethod                                   # Вывод в консоль информации о квитанциях (много)
+    def print_tickets(list_of_tickets):
         for i in list_of_tickets:
             Print_ticket.print_ticket(i)
 
@@ -66,17 +67,16 @@ class Output(Print_ticket):
             with kb.Listener(on_release=on_release) as listener:
                 listener.join()
             return k
-
         return input_ver_1()    # input_ver_2()
 
-    @staticmethod                   # Метод маскировки звездочками *** при вводе пароля
+    @staticmethod                                   # Метод маскировки звездочками *** при вводе пароля
     def input_psw(prompt):
         pwd = ""
         sys.stdout.write(prompt)
         sys.stdout.flush()
         while True:
             key = keyboard.read_key(True)
-            keyboard.unhook_all()
+            # keyboard.unhook_all()
             if key == 'enter':                  # При вводе Enter
                 if pwd != '':
                     sys.stdout.write('\n')
@@ -144,7 +144,6 @@ class Output(Print_ticket):
     #     sys.stdout.flush()
     #     pwd = Output.read_char()
     #     return pwd
-
 
     @staticmethod                                       # Основной цыкл вывода меню в консоль
     def menu(menu, title='Добро пожаловать в мастерскую !'):

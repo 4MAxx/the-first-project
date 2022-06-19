@@ -1,7 +1,8 @@
 import datetime, random
 from stuff import mystr
-from dataclasses import Tickets_data
+from dataclasses import Tickets_data as Tickets_dat
 from in_n_output import Output
+from dataclasses_viaBD import Tickets_db
 
 
 # Классы типов техники
@@ -71,8 +72,15 @@ class TV(Tech):
 
 # Класс пользовательских задач
 class User:
-    @staticmethod                                       # Функционал при выборе =СДАТЬ ТЕХНИКУ В РЕМОНТ=
+    mode_flag = 'files'
+    @staticmethod                           # Функционал при выборе =СДАТЬ ТЕХНИКУ В РЕМОНТ=
     def user_give():
+        # Проверка режима работы с БД или файлами
+        if User.mode_flag == 'db':
+            Tickets_data = Tickets_db()
+        else:
+            Tickets_data = Tickets_dat()
+        # регистрация ремонта
         ticket = {'num': '', 'fio': '', 'type': '', 'date_in': str(datetime.date.today()),
                   'date_out': str(datetime.date.today() + datetime.timedelta(days=random.randint(1, 5))), 'status': ''}
         Output.clear()
@@ -103,8 +111,14 @@ class User:
             print(Output.txt_err + 'ФИО не должно быть пустым или содержать цифры')
         Output.press_enter()
 
-    @staticmethod                                       # Функционал при выборе =ПРОСМОТРЕТЬ ИНФОРМАЦИЮ=
+    @staticmethod                           # Функционал при выборе =ПРОСМОТРЕТЬ ИНФОРМАЦИЮ=
     def user_get_info():
+        # Проверка режима работы с БД или файлами
+        if User.mode_flag == 'db':
+            Tickets_data = Tickets_db()
+        else:
+            Tickets_data = Tickets_dat()
+
         Output.clear()
         k = input('Введите номер квитанции или ФИО:\n')
         Output.clear()
