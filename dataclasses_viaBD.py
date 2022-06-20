@@ -225,10 +225,14 @@ class Tickets_db:
     def load_file(self):
         pass
 
-    # возвращаем количество квитанций
-    def getNums(self):
+    # обновляем количество квитанций
+    def update_nums(self):
         self.cur.execute(f'SELECT count(*) FROM {self.table_for_tickets}')
         self.nums = self.cur.fetchone()[0]
+
+    # возвращаем количество квитанций
+    def getNums(self):
+        return self.nums
 
     # сихронизация БД с данными которые записаны в файле (дополняем БД) (служебный метод для заполнения БД вначале)
     def synchronize(self):
@@ -242,7 +246,7 @@ class Tickets_db:
             except pymysql.Error as error:
                 # print('Ошибка при работе с базой данных', error)
                 pass
-        self.getNums()  # обновляем количество админов в БД
+        self.update_nums()  # обновляем количество админов в БД
 
 
 # Блок кода для тестирования работы библиотеки
