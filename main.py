@@ -1,7 +1,7 @@
 from in_n_output import Output
 from user_gui import User
-from dataclasses import Tickets_data as Tickets_dat
-from dataclasses import Admins_data as Admins_dat
+from dataclasses import Tickets_data as Tickets_file
+from dataclasses import Admins_data as Admins_file
 from dataclasses_viaBD import Admins_db, Tickets_db
 from stuff import mystr, normdate
 
@@ -242,7 +242,9 @@ if __name__ == '__main__':
         print('Введите режим работы программы:\n' + Output.txt_line)
         print('  1 - с файлами')
         print('  2 - с БД (MySQL)')
-        t = Output.readkey()
+        # t = Output.readkey()
+        print('\nВведите вариант и нажмите Enter:')
+        t = input()
         if t and t in '12':
             break
     if t == '2':
@@ -250,8 +252,12 @@ if __name__ == '__main__':
         Tickets_data = Tickets_db()
         User.mode_flag = 'db'
     else:
-        Tickets_data = Tickets_dat()
-        Admins_data = Admins_dat()
+        Tickets_data = Tickets_file()
+        Admins_data = Admins_file()
         Tickets_data.load_file()
-
+    # Запуск меню (основной цикл)
     Output.menu(Menu_Trees.main_menu)
+    # Закрываем соединение с MySQL (если использовалась БД)
+    # if t == '2':
+    #     Admins_data.cur.close()
+    #     Tickets_data.cur.close()
