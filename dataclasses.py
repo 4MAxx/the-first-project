@@ -1,5 +1,6 @@
 import csv, bcrypt
 from datetime import date
+import datetime as dtime
 import configparser
 # from dataclasses_viaBD import Tickets_db, Admins_db
 
@@ -32,7 +33,10 @@ class Admins_data:
                 fr = csv.reader(f_read, delimiter=",")
                 Admins_data.info = list(fr)
                 Admins_data.amount = len(Admins_data.info)
-        except FileNotFoundError:
+        except FileNotFoundError as error:
+            with open(config['log']['log_file'], 'a') as f:
+                print(f'Файл данных админов не найден [{dtime.datetime.now()}]\n'
+                      f' {error}', file=f)
             Admins_data.info = []
             Admins_data.amount = 0
 
@@ -123,7 +127,7 @@ class Admins_data:
 # Класс управления квитанциями
 class Tickets_data:
     filename = 'Data/tickets.csv'   # имя файла с квитанциями (по дефолту)
-    data = []                       # в атрибут загружается каитанции (список словарей)
+    data = []                       # в атрибут загружается квитанции [{список словарей}]
     nums = 0                        # количество загруженных квитанций (определяется при загрузке из файла)
                                     # используется для присвоения следующего номера при регистрации нового ремонта
 
@@ -198,10 +202,13 @@ class Tickets_data:
                 for dict in reader:
                     Tickets_data.data.append(dict)
                     Tickets_data.nums += 1
-        except FileNotFoundError:
+        except FileNotFoundError as error:
             # если нет файла квитанций, то ошибки при чтении из файла игнорим, есть возможность войти в систему и
             # сдавать в ремонт, админ панель доступна. При попытках поиска информации выводится ошибка, что квитанции нету
             # оно логично - т.к. списки будут пусты
+            with open(config['log']['log_file'], 'a') as f:
+                print(f'Файл данных квитанций не найден [{dtime.datetime.now()}]\n'
+                      f' {error}', file=f)
             pass
 
     @staticmethod                       # возвращаем количество квитанций

@@ -3,6 +3,7 @@ import pymysql.cursors
 import configparser
 import bcrypt
 from datetime import date
+import datetime as dtime
 from dataclasses import Admins_data, Tickets_data
 
 
@@ -20,22 +21,28 @@ class Admins_db:
                 passwd=config.get('mysql', 'psw')
             )
             self.cur = self.mydb.cursor()
-            # print('BD connected successfuly...')
+            # логируем результат соединения с БД
+            with open(config['log']['log_file'], 'a') as f:
+                print(f'{self.table_for_admins} DB connected successfuly... [{dtime.datetime.now()}]', file=f)
         except pymysql.Error as error:
-            # print('BD connection refused...\n', error)
-            pass
+            # логируем результат соединения с БД при неудаче соединения
+            with open(config['log']['log_file'], 'a') as f:
+                print(f'{self.table_for_admins} DB connection refused... [{dtime.datetime.now()}]\n {error}', file=f)
+        # загружаем данные мастер-логина из файла
         self.__master_login = [config['master_login']['login'],
                                config['master_login']['psw'],
                                config['master_login']['fio']]
+        # создаем таблицу в БД при ее отсутствии
         self.cur.execute(f'CREATE TABLE IF NOT EXISTS {self.table_for_admins}'
                          f' (login varchar(50) UNIQUE, psw text, fio text)')
-        self.cur.execute(f'SELECT count(*) FROM {self.table_for_admins}')  # определяем количество админов в БД
-        self.amount = self.cur.fetchone()[0]  # количество админов в БД
-        self.changes = 0  # маркер изменения списка админов (меняется при редактировании)
+        # определяем количество админов в БД
+        self.cur.execute(f'SELECT count(*) FROM {self.table_for_admins}')
+        self.amount = self.cur.fetchone()[0]    # количество админов в БД
+        self.changes = 0                        # маркер изменения списка админов (меняется при редактировании)
         self.found_ticket = []  # фиксируется найденная квитанция при действиях с квитанциями [{список словарей}]
-        self.queries = []
+        self.queries = []       # в этом атрибуте сохраняется история запросов, если придется откатывать изменения
 
-    # загрузка данных админов из файла (список списков) не используется
+    # загрузка данных админов из файла [[список списков]] не используется
     def load_file(self):
         pass
 
@@ -128,7 +135,7 @@ class Admins_db:
             self.mydb.commit()
         self.queries = []
         self.changes = 0
-        self.get_amount()  # обновляем количество админов в БД
+        self.update_amount()  # обновляем количество админов в БД
 
     # сихронизация БД с данными которые записаны в файле (дополняем БД) (служебный метод для заполнения БД вначале)
     def synchronize(self):
@@ -140,12 +147,17 @@ class Admins_db:
                 self.cur.execute(f'INSERT INTO {self.table_for_admins} VALUES (%s,%s,%s)', i)
                 self.mydb.commit()
             except pymysql.Error as error:
-                # print('Ошибка при работе с базой данных', error)
-                pass
-        self.get_amount()  # обновляем количество админов в БД
+                # загружаем данные конфигурации из config.ini
+                config = configparser.ConfigParser()
+                config.read('config.ini', encoding='utf-8-sig')
+                # логируем результат записи с БД при неудаче
+                with open(config['log']['log_file'], 'a') as f:
+                    print(f'Ошибка при работе с базой данных {self.table_for_admins} [{dtime.datetime.now()}]\n'
+                          f' {error}', file=f)
+        self.update_amount()  # обновляем количество админов в БД
 
     # метод определения количества админов в БД (служебный метод)
-    def get_amount(self):
+    def update_amount(self):
         self.cur.execute(f'SELECT count(*) FROM {self.table_for_admins}')
         self.amount = self.cur.fetchone()[0]
 
@@ -164,17 +176,22 @@ class Tickets_db:
                 passwd=config.get('mysql', 'psw')
             )
             self.cur = self.mydb.cursor()
-            # print('BD connected successfuly...')
+            # логируем результат соединения с БД
+            with open(config['log']['log_file'], 'a') as f:
+                print(f'{self.table_for_tickets} DB connected successfuly... [{dtime.datetime.now()}]', file=f)
         except pymysql.Error as error:
-            # print('BD connection refused...\n', error)
-            pass
+            # логируем результат соединения с БД при неудаче соединения
+            with open(config['log']['log_file'], 'a') as f:
+                print(f'{self.table_for_tickets} DB connection refused... [{dtime.datetime.now()}]\n {error}', file=f)
+        # создаем таблицу в БД при ее отсутствии
         self.cur.execute(f'CREATE TABLE IF NOT EXISTS {self.table_for_tickets}'
                          f' (num varchar(20) UNIQUE, fio text, type text, date_in date,'
                          f' date_out date, status varchar(20))')
-        self.cur.execute(f'SELECT count(*) FROM {self.table_for_tickets}')  # определяем количество квитанций в БД
+        # определяем количество квитанций в БД
+        self.cur.execute(f'SELECT count(*) FROM {self.table_for_tickets}')
         self.nums = self.cur.fetchone()[0]  # количество квитанций в БД
-        self.found_ticket = []  # фиксируется найденная квитанция при действиях с квитанциями (список словарей)
-        self.found_index = 0  # индекс найденной квитанции (исп-ся при дейстаиях с квитанциями в админ панели)
+        self.found_ticket = []  # фиксируется найденная квитанция при действиях с квитанциями [{список словарей}]
+        self.found_index = 0    # "num" найденной квитанции (исп-ся при дейстаиях с квитанциями в админ панели)
 
     # поиск квитанции(ий) с заданными параметрами
     def search_ticket(self, param, flag):
@@ -244,8 +261,13 @@ class Tickets_db:
                 self.cur.execute(f'INSERT INTO {self.table_for_tickets} VALUES (%s,%s,%s,%s,%s,%s)', i)
                 self.mydb.commit()
             except pymysql.Error as error:
-                # print('Ошибка при работе с базой данных', error)
-                pass
+                # загружаем данные конфигурации из config.ini
+                config = configparser.ConfigParser()
+                config.read('config.ini', encoding='utf-8-sig')
+                # логируем результат записи с БД при неудаче
+                with open(config['log']['log_file'], 'a') as f:
+                    print(f'Ошибка при работе с базой данных {self.table_for_tickets} [{dtime.datetime.now()}]\n'
+                          f' {error}', file=f)
         self.update_nums()  # обновляем количество админов в БД
 
 

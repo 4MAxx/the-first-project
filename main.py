@@ -36,7 +36,7 @@ class Adminka:
         Output.clear()
         l = input('Введите логин: ')
         # p = input('Введите пароль: ')
-        p = Output.input_psw('Введите пароль: ')
+        p = Output.input_psw('Введите пароль: ')    # ввод пароля с маскировкой *****
         if Admins_data.check_login(l, p):
             Adminka.temp_login = l
             # вход / выход  =АДМИН-ПАНЕЛЬ=
@@ -242,22 +242,23 @@ if __name__ == '__main__':
         print('Введите режим работы программы:\n' + Output.txt_line)
         print('  1 - с файлами')
         print('  2 - с БД (MySQL)')
-        # t = Output.readkey()
+        # check = Output.readkey()
         print('\nВведите вариант и нажмите Enter:')
-        t = input()
-        if t and t in '12':
+        check = input()
+        if check and check in '12':
             break
-    if t == '2':
+    if check == '2':
         Admins_data = Admins_db()
         Tickets_data = Tickets_db()
-        User.mode_flag = 'db'
+        User.class_mode = Tickets_data      # в модуль User передаем ссылку на объект класса работы с БД
     else:
-        Tickets_data = Tickets_file()
         Admins_data = Admins_file()
+        Tickets_data = Tickets_file()
+        User.class_mode = Tickets_data      # в модуль User передаем ссылку на объект класса работы с файлами
         Tickets_data.load_file()
     # Запуск меню (основной цикл)
     Output.menu(Menu_Trees.main_menu)
     # Закрываем соединение с MySQL (если использовалась БД)
-    # if t == '2':
-    #     Admins_data.cur.close()
-    #     Tickets_data.cur.close()
+    if check == '2':
+        Admins_data.cur.close()
+        Tickets_data.cur.close()

@@ -1,8 +1,8 @@
 import datetime, random
 from stuff import mystr
-from dataclasses import Tickets_data as Tickets_file
 from in_n_output import Output
-from dataclasses_viaBD import Tickets_db
+# from dataclasses import Tickets_data as Tickets_file
+# from dataclasses_viaBD import Tickets_db
 
 
 # Классы типов техники
@@ -72,14 +72,12 @@ class TV(Tech):
 
 # Класс пользовательских задач
 class User:
-    mode_flag = 'files'
+    class_mode = '' # в этот атрибут из main.py передается ссылка на объект класса работы с данными (файлы или БД)
+
     @staticmethod                           # Функционал при выборе =СДАТЬ ТЕХНИКУ В РЕМОНТ=
     def user_give():
-        # Проверка режима работы с БД или файлами
-        if User.mode_flag == 'db':
-            Tickets_data = Tickets_db()
-        else:
-            Tickets_data = Tickets_file()
+        # передаем в переменную Tickets_data ссылку на объект класса работы с данными (выбранный режим работы)
+        Tickets_data = User.class_mode
         # регистрация ремонта
         ticket = {'num': '', 'fio': '', 'type': '', 'date_in': str(datetime.date.today()),
                   'date_out': str(datetime.date.today() + datetime.timedelta(days=random.randint(1, 5))), 'status': ''}
@@ -94,11 +92,11 @@ class User:
             print('1 - телефон')
             print('2 - ноутбук')
             print('3 - телевизор')
-            t = input()
-            if t and t in '123':
-                if t == '1': ticket['type'] = Phone()
-                elif t == '2': ticket['type'] = Note()
-                elif t == '3': ticket['type'] = TV()
+            check = input()
+            if check and check in '123':
+                if check == '1': ticket['type'] = Phone()
+                elif check == '2': ticket['type'] = Note()
+                elif check == '3': ticket['type'] = TV()
                 ticket['status'] = 'принята в ремонт'
                 Output.clear()
                 print(Output.txt_suc+'Техника принята в ремонт\n'+Output.txt_line)
@@ -110,17 +108,11 @@ class User:
         else:
             print(Output.txt_err + 'ФИО не должно быть пустым или содержать цифры')
         Output.press_enter()
-        # Закрываем соединение с MySQL (если использовалась БД)
-        if User.mode_flag == 'db':
-            Tickets_data.cur.close()
 
     @staticmethod                           # Функционал при выборе =ПРОСМОТРЕТЬ ИНФОРМАЦИЮ=
     def user_get_info():
-        # Проверка режима работы с БД или файлами
-        if User.mode_flag == 'db':
-            Tickets_data = Tickets_db()
-        else:
-            Tickets_data = Tickets_file()
+        # передаем в переменную Tickets_data ссылку на объект класса работы с данными (выбранный режим работы)
+        Tickets_data = User.class_mode
         # тело метода
         Output.clear()
         k = input('Введите номер квитанции или ФИО:\n')
@@ -131,6 +123,3 @@ class User:
         else:
             print(Output.txt_err + 'Квитанция не найдена')
         Output.press_enter()
-        # Закрываем соединение с MySQL (если использовалась БД)
-        if User.mode_flag == 'db':
-            Tickets_data.cur.close()
